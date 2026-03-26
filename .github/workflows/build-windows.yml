@@ -7,6 +7,13 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    # WICHTIG: Hier geben wir dem Workflow explizit Schreibrechte!
+    permissions:
+      contents: write
+
+    env:
+      # Fix für die Node.js 24 Warnung
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
     - name: Checkout Code
