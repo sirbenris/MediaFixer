@@ -1,0 +1,43 @@
+name: Build Windows EXE
+
+on:
+  release:
+    types: [published] # Startet, wenn du ein Release veröffentlichst
+
+jobs:
+  build:
+    runs-on: windows-latest # Hier läuft ein echter Windows-Server!
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install customtkinter pyinstaller
+
+    - name: Build with PyInstaller
+      shell: pwsh
+      run: |
+        # Wir finden den Pfad von customtkinter automatisch
+        $tk_path = python -c "import customtkinter; import os; print(os.path.dirname(customtkinter.__file__))"
+        
+        # Der magische Build-Befehl
+        pyinstaller --noconsole --onefile --name "MediaFixer-windows" `
+        --add-data "locales;locales" `
+        --add-data "audio_flags.json;." `
+        --add-data "$($tk_path);customtkinter" `
+        main.py
+
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v2
+      with:
+        files: dist/MediaFixer-windows.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
