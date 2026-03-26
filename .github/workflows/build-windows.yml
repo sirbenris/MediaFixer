@@ -2,11 +2,11 @@ name: Build Windows EXE
 
 on:
   release:
-    types: [published] # Startet, wenn du ein Release veröffentlichst
+    types: [published, edited, created]
 
 jobs:
   build:
-    runs-on: windows-latest # Hier läuft ein echter Windows-Server!
+    runs-on: windows-latest
 
     steps:
     - name: Checkout Code
@@ -25,10 +25,8 @@ jobs:
     - name: Build with PyInstaller
       shell: pwsh
       run: |
-        # Wir finden den Pfad von customtkinter automatisch
         $tk_path = python -c "import customtkinter; import os; print(os.path.dirname(customtkinter.__file__))"
         
-        # Der magische Build-Befehl
         pyinstaller --noconsole --onefile --name "MediaFixer-windows" `
         --add-data "locales;locales" `
         --add-data "audio_flags.json;." `
