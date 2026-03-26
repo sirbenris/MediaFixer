@@ -14,7 +14,25 @@ A powerful and modular desktop application to analyze and repair audio streams i
 2. `pip install customtkinter`
 3. `python main.py`
 
-## OR DOWNLOAD AT RELEASES PAGE (soon)
+## OR DOWNLOAD AT RELEASES PAGE (https://github.com/sirbenris/MediaFixer/releases)
+
+## 📦 Running the Pre-built Binary (Linux)
+
+If you downloaded the standalone version from the [Releases](https://github.com/sirbenris/MediaFixer/releases) page, you might need to give it execution permissions first:
+
+### Option 1: Using the Terminal (Recommended)
+1. Open your terminal in the download folder.
+2. Make the file executable:
+   chmod +x MediaFixer
+3. Run it:
+   ./MediaFixer
+
+### Option 2: Using the GUI
+1. Right-click the MediaFixer file.
+2. Select Properties.
+3. Go to the Permissions tab.
+4. Check the box "Allow executing file as program".
+5. Close and double-click the file to launch.
 
 ## ⚖️ License
 MIT - Built by Benris
