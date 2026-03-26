@@ -1,0 +1,20 @@
+# Python System-Müll
+__pycache__/
+*.py[cod]
+
+# Environments & Private Settings
+venv/
+.env
+config.json
+
+# Binaries und Temp Files (werden nicht hochgeladen)
+bin/
+*.temp.mp4
+*.orig
+build/
+dist/
+*.spec
+
+# OS specific
+.DS_Store
+Thumbs.db
