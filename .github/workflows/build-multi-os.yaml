@@ -14,14 +14,13 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            artifact_name: MediaFixer-windows
-            is_windows: true
+            artifact_name: "MediaFixer-windows"
+            # Windows bekommt den Ordner-Modus
+            pyinstaller_args: "--onedir" 
           - os: ubuntu-latest
-            artifact_name: MediaFixer-linux
-            is_windows: false
-
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+            artifact_name: "MediaFixer-linux"
+            # Linux bleibt bei der einzelnen Datei
+            pyinstaller_args: "--onefile"
 
     steps:
     - name: Checkout Code
@@ -40,30 +39,30 @@ jobs:
     - name: Build with PyInstaller
       shell: bash
       run: |
+        # Pfad-Trenner ermitteln (; für Win, : für Linux)
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then SEP=";"; else SEP=":"; fi
+        
         TK_PATH=$(python -c "import customtkinter; import os; print(os.path.dirname(customtkinter.__file__))")
         
-        # Windows nutzt --onedir (default), Linux bleibt bei --onefile
-        BUILD_MODE="--onefile"
-        if [ "${{ matrix.is_windows }}" = "true" ]; then
-          BUILD_MODE="--onedir"
-        fi
-
-        pyinstaller --noconsole $BUILD_MODE --name "${{ matrix.artifact_name }}" \
-        --add-data "locales$(if [ "${{ matrix.is_windows }}" = "true" ]; then echo ';'; else echo ':'; fi)locales" \
-        --add-data "audio_flags.json$(if [ "${{ matrix.is_windows }}" = "true" ]; then echo ';'; else echo ':'; fi)." \
-        --add-data "${TK_PATH}$(if [ "${{ matrix.is_windows }}" = "true" ]; then echo ';'; else echo ':'; fi)customtkinter" \
+        pyinstaller --noconsole ${{ matrix.pyinstaller_args }} --name "${{ matrix.artifact_name }}" \
+        --add-data "locales${SEP}locales" \
+        --add-data "audio_flags.json${SEP}." \
+        --add-data "${TK_PATH}${SEP}customtkinter" \
         main.py
 
-    - name: Zip Windows Artifact
-      if: matrix.is_windows == true
+    # DIESER SCHRITT IST NUR FÜR WINDOWS
+    - name: Zip Windows Folder
+      if: matrix.os == 'windows-latest'
       shell: pwsh
-      run: Compress-Archive -Path dist/MediaFixer-windows -DestinationPath dist/MediaFixer-windows.zip
+      run: |
+        # Wir zippen den kompletten Ordner aus dem 'dist' Verzeichnis
+        Compress-Archive -Path "dist/MediaFixer-windows" -DestinationPath "dist/MediaFixer-windows.zip" -Force
 
-    - name: Upload Release Asset
+    # DIESER SCHRITT LÄDT DIE DATEIEN HOCH
+    - name: Upload Release Assets
       uses: softprops/action-gh-release@v2
       with:
-        # Lädt für Windows die ZIP hoch, für Linux das Binary
         files: |
-          ${{ matrix.is_windows == true && 'dist/MediaFixer-windows.zip' || 'dist/MediaFixer-linux' }}
+          ${{ matrix.os == 'windows-latest' && 'dist/MediaFixer-windows.zip' || 'dist/MediaFixer-linux' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
