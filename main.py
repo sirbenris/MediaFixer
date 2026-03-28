@@ -16,7 +16,9 @@ import media_engine
 
 # --- UI Initialization ---
 customtkinter.set_appearance_mode("dark")
-customtkinter.set_default_color_theme("blue")
+
+# Loads custom theme JSON instead of standard colors.
+customtkinter.set_default_color_theme("rime.json")
 
 app = customtkinter.CTk()
 app.geometry("1100x900")
@@ -520,23 +522,33 @@ for col, w in [(texts.get("col_lang", "Lang"), 110), (texts.get("col_codec", "Co
 scroll_table = customtkinter.CTkScrollableFrame(tab_single, fg_color="transparent")
 scroll_table.pack(padx=10, pady=(0, 10), fill="both", expand=True)
 
-# --- Tab 2 (Bulk) ---
-customtkinter.CTkLabel(tab_bulk, text=texts.get("lbl_bulk", "Bulk Processing"), font=("Arial", 20, "bold")).pack(pady=10)
+# ==========================================
+# --- Tab 2: Bulk Processing ---
+# ==========================================
 
-frame_bulk_top = customtkinter.CTkFrame(tab_bulk, fg_color="transparent")
-frame_bulk_top.pack(pady=5)
-btn_select_folder = customtkinter.CTkButton(frame_bulk_top, text=texts.get("btn_folder", "Select Folder"), command=select_bulk_folder)
+# Main scrollable container for the bulk tab to prevent UI overflow
+scroll_bulk = customtkinter.CTkScrollableFrame(tab_bulk, fg_color="transparent")
+scroll_bulk.pack(fill="both", expand=True, padx=0, pady=0)
+
+customtkinter.CTkLabel(scroll_bulk, text=texts.get("lbl_bulk", "Bulk Processing"), font=("Arial", 22, "bold")).pack(pady=(10, 20))
+
+frame_bulk_top = customtkinter.CTkFrame(scroll_bulk, fg_color="transparent")
+frame_bulk_top.pack(pady=(0, 15))
+btn_select_folder = customtkinter.CTkButton(frame_bulk_top, text=texts.get("btn_folder", "Select Folder"), font=("Arial", 14, "bold"), height=35, command=select_bulk_folder)
 btn_select_folder.pack(side="left", padx=10)
-lbl_bulk_folder = customtkinter.CTkLabel(frame_bulk_top, text="...", text_color="gray")
-lbl_bulk_folder.pack(side="left")
+lbl_bulk_folder = customtkinter.CTkLabel(frame_bulk_top, text="No folder selected", font=("Arial", 13, "italic"), text_color="gray50")
+lbl_bulk_folder.pack(side="left", padx=10)
 
-# Filters Section
-frame_filter = customtkinter.CTkFrame(tab_bulk)
-frame_filter.pack(fill="x", padx=20, pady=10)
-customtkinter.CTkLabel(frame_filter, text=texts.get("lbl_filter", "1. Filters"), font=("Arial", 14, "bold")).pack(anchor="w", padx=10, pady=5)
+# --- Section 1: Filters ---
+# Container configured as a card with border and contrasting background.
+frame_filter = customtkinter.CTkFrame(scroll_bulk, corner_radius=10, fg_color=("gray85", "gray16"), border_width=1, border_color=("gray75", "gray25"))
+frame_filter.pack(fill="x", padx=30, pady=10)
+customtkinter.CTkLabel(frame_filter, text=texts.get("lbl_filter", "1. Filters"), font=("Arial", 16, "bold"), text_color="#3a7ebf").pack(anchor="w", padx=15, pady=(15, 5))
 
 f_row1 = customtkinter.CTkFrame(frame_filter, fg_color="transparent")
-f_row1.pack(fill="x", padx=10, pady=5)
+f_row1.pack(fill="x", padx=15, pady=(5, 15))
+
+# Filter inputs initialization
 customtkinter.CTkLabel(f_row1, text=texts.get("lbl_ext", "Ext:")).pack(side="left")
 var_bulk_ext = customtkinter.StringVar(value=texts.get("opt_all_vids", "All Videos"))
 customtkinter.CTkOptionMenu(f_row1, values=[texts.get("opt_all_vids", "All Videos"), ".mp4", ".mkv"], variable=var_bulk_ext, width=120).pack(side="left", padx=10)
@@ -548,13 +560,15 @@ customtkinter.CTkCheckBox(f_row1, text=texts.get("chk_case", "Case Sensitive"), 
 var_bulk_sub = customtkinter.BooleanVar(value=True)
 customtkinter.CTkCheckBox(f_row1, text=texts.get("chk_sub", "Subfolders"), variable=var_bulk_sub).pack(side="right", padx=10)
 
-# Conditions Section
-frame_target = customtkinter.CTkFrame(tab_bulk)
-frame_target.pack(fill="x", padx=20, pady=10)
-customtkinter.CTkLabel(frame_target, text=texts.get("lbl_bulk_target", "2. Apply to? (Conditions)"), font=("Arial", 14, "bold")).pack(anchor="w", padx=10, pady=5)
+# --- Section 2: Conditions ---
+frame_target = customtkinter.CTkFrame(scroll_bulk, corner_radius=10, fg_color=("gray85", "gray16"), border_width=1, border_color=("gray75", "gray25"))
+frame_target.pack(fill="x", padx=30, pady=10)
+customtkinter.CTkLabel(frame_target, text=texts.get("lbl_bulk_target", "2. Apply to? (Conditions)"), font=("Arial", 16, "bold"), text_color="#3a7ebf").pack(anchor="w", padx=15, pady=(15, 5))
 
 t_row1 = customtkinter.CTkFrame(frame_target, fg_color="transparent")
-t_row1.pack(fill="x", padx=10, pady=5)
+t_row1.pack(fill="x", padx=15, pady=5)
+
+# Track selection inputs
 opt_tracks = [texts.get("opt_all_audio", "All Audio"), texts.get("opt_track_0", "Track #0"), texts.get("opt_track_1", "Track #1"), texts.get("opt_track_custom", "Custom Track #")]
 var_bulk_track = customtkinter.StringVar(value=opt_tracks[0])
 customtkinter.CTkOptionMenu(t_row1, values=opt_tracks, variable=var_bulk_track, width=160, command=on_track_sel_changed).pack(side="left", padx=5)
@@ -565,7 +579,9 @@ var_bulk_skip = customtkinter.BooleanVar(value=True)
 customtkinter.CTkCheckBox(t_row1, text=texts.get("lbl_skip_correct", "Skip if correct"), variable=var_bulk_skip).pack(side="left", padx=20)
 
 t_row2 = customtkinter.CTkFrame(frame_target, fg_color="transparent")
-t_row2.pack(fill="x", padx=10, pady=5)
+t_row2.pack(fill="x", padx=15, pady=(5, 15))
+
+# Conditional processing parameters
 var_cond_lang_en = customtkinter.BooleanVar(value=False); customtkinter.CTkCheckBox(t_row2, text=texts.get("lbl_if_lang", "If Lang:"), variable=var_cond_lang_en, width=80).pack(side="left", padx=(5,0))
 var_cond_lang_val = customtkinter.StringVar(value=config.available_flags[0]); customtkinter.CTkOptionMenu(t_row2, values=config.available_flags, variable=var_cond_lang_val, width=100).pack(side="left", padx=(5, 15))
 var_cond_codec_en = customtkinter.BooleanVar(value=False); customtkinter.CTkCheckBox(t_row2, text=texts.get("lbl_if_codec", "If Codec:"), variable=var_cond_codec_en, width=80).pack(side="left", padx=(5,0))
@@ -573,13 +589,15 @@ var_cond_codec_val = customtkinter.StringVar(value=config.FILTER_CODEC_OPTIONS[0
 var_cond_bit_en = customtkinter.BooleanVar(value=False); customtkinter.CTkCheckBox(t_row2, text=texts.get("lbl_if_bitrate", "If Bitrate:"), variable=var_cond_bit_en, width=80).pack(side="left", padx=(5,0))
 var_cond_bit_val = customtkinter.StringVar(value=""); customtkinter.CTkEntry(t_row2, textvariable=var_cond_bit_val, width=100, placeholder_text="kbps (e.g. 192)").pack(side="left", padx=(5, 15))
 
-# Action Section
-frame_action = customtkinter.CTkFrame(tab_bulk)
-frame_action.pack(fill="x", padx=20, pady=10)
-customtkinter.CTkLabel(frame_action, text=texts.get("lbl_bulk_what", "3. What to do? (Action)"), font=("Arial", 14, "bold")).pack(anchor="w", padx=10, pady=5)
+# --- Section 3: Action ---
+frame_action = customtkinter.CTkFrame(scroll_bulk, corner_radius=10, fg_color=("gray85", "gray16"), border_width=1, border_color=("gray75", "gray25"))
+frame_action.pack(fill="x", padx=30, pady=10)
+customtkinter.CTkLabel(frame_action, text=texts.get("lbl_bulk_what", "3. What to do? (Action)"), font=("Arial", 16, "bold"), text_color="#3a7ebf").pack(anchor="w", padx=15, pady=(15, 5))
 
 a_row1 = customtkinter.CTkFrame(frame_action, fg_color="transparent")
-a_row1.pack(fill="x", padx=10, pady=5)
+a_row1.pack(fill="x", padx=15, pady=(5, 15))
+
+# Processing action parameters
 bulk_acts = [texts.get("btn_action_patch", "Patch"), texts.get("btn_action_add", "Add New"), texts.get("btn_action_delete", "Delete")]
 var_bulk_act = customtkinter.StringVar(value=bulk_acts[0])
 customtkinter.CTkOptionMenu(a_row1, values=bulk_acts, variable=var_bulk_act, width=130, button_color="darkblue").pack(side="left", padx=2)
@@ -592,16 +610,23 @@ customtkinter.CTkOptionMenu(a_row1, values=config.BITRATE_OPTIONS, variable=var_
 var_bulk_chan = customtkinter.StringVar(value="Original")
 customtkinter.CTkOptionMenu(a_row1, values=config.CHANNEL_OPTIONS, variable=var_bulk_chan, width=130, fg_color="gray30").pack(side="left", padx=2)
 
-# Start Section
-frame_start = customtkinter.CTkFrame(tab_bulk, fg_color="transparent")
-frame_start.pack(fill="x", padx=20, pady=10)
-customtkinter.CTkLabel(frame_start, text=texts.get("lbl_settings", "4. Start & Backup"), font=("Arial", 14, "bold")).pack(anchor="w", pady=5)
+# --- Section 4: Start & Execution ---
+frame_start = customtkinter.CTkFrame(scroll_bulk, fg_color="transparent")
+frame_start.pack(fill="x", padx=30, pady=(20, 10))
+
+# Isolated container for backup toggle
+backup_frame = customtkinter.CTkFrame(frame_start, corner_radius=8, fg_color=("gray80", "gray20"))
+backup_frame.pack(pady=(0, 15))
 var_bulk_backup = customtkinter.BooleanVar(value=True)
-customtkinter.CTkCheckBox(frame_start, text=texts.get("lbl_backup", "Keep Backup"), variable=var_bulk_backup).pack(pady=5)
-btn_bulk_go = customtkinter.CTkButton(frame_start, text=texts.get("btn_start_bulk", "Vorschau & Simulation"), font=("Arial", 16, "bold"), fg_color="darkred", hover_color="#8b0000", height=40, command=simulate_bulk_process)
-btn_bulk_go.pack(pady=10)
-bulk_prog_bar = customtkinter.CTkProgressBar(frame_start, height=15)
-bulk_prog_bar.pack(fill="x", padx=40, pady=10); bulk_prog_bar.set(0)
+customtkinter.CTkCheckBox(backup_frame, text=texts.get("lbl_backup", "Keep Original File as Backup (.orig)"), font=("Arial", 13), variable=var_bulk_backup).pack(padx=20, pady=10)
+
+# Primary execution button
+btn_bulk_go = customtkinter.CTkButton(frame_start, text=texts.get("btn_start_bulk", "Vorschau & Simulation"), font=("Arial", 18, "bold"), fg_color="#8b0000", hover_color="#5a0000", height=50, corner_radius=8, command=simulate_bulk_process)
+btn_bulk_go.pack(pady=5, fill="x", padx=150)
+
+# Progress visualization
+bulk_prog_bar = customtkinter.CTkProgressBar(frame_start, height=12, corner_radius=5)
+bulk_prog_bar.pack(fill="x", padx=40, pady=15); bulk_prog_bar.set(0)
 lbl_bulk_status = customtkinter.CTkLabel(frame_start, text="", font=("Arial", 12))
 lbl_bulk_status.pack()
 
