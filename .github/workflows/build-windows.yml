@@ -1,4 +1,4 @@
-name: Build Windows EXE
+name: Build Multi-OS Binaries
 
 on:
   release:
@@ -6,13 +6,21 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
-    # WICHTIG: Hier geben wir dem Workflow explizit Schreibrechte!
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: MediaFixer-windows.exe
+            separator: ";"
+          - os: ubuntu-latest
+            artifact_name: MediaFixer-linux
+            separator: ":"
 
     env:
-      # Fix für die Node.js 24 Warnung
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
@@ -30,19 +38,20 @@ jobs:
         pip install customtkinter pyinstaller
 
     - name: Build with PyInstaller
-      shell: pwsh
+      shell: bash
       run: |
-        $tk_path = python -c "import customtkinter; import os; print(os.path.dirname(customtkinter.__file__))"
+        # Pfad zu customtkinter finden (funktioniert auf beiden OS via bash)
+        TK_PATH=$(python -c "import customtkinter; import os; print(os.path.dirname(customtkinter.__file__))")
         
-        pyinstaller --noconsole --onefile --name "MediaFixer-windows" `
-        --add-data "locales;locales" `
-        --add-data "audio_flags.json;." `
-        --add-data "$($tk_path);customtkinter" `
+        pyinstaller --noconsole --onefile --name "${{ matrix.artifact_name }}" \
+        --add-data "locales${{ matrix.separator }}locales" \
+        --add-data "audio_flags.json${{ matrix.separator }}." \
+        --add-data "${TK_PATH}${{ matrix.separator }}customtkinter" \
         main.py
 
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v2
       with:
-        files: dist/MediaFixer-windows.exe
+        files: dist/${{ matrix.artifact_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
