@@ -67,8 +67,12 @@ def download_ffmpeg_windows(status_callback):
 
 def probe_file(filepath):
     cmd = [FFPROBE_CMD, "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", "-select_streams", "a", filepath]
+    
+    # Der Ninja-Modus: Nur für Windows aktivieren!
+    cflags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+    
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True, creationflags=cflags)
         return json.loads(result.stdout)
     except:
         return None

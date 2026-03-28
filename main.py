@@ -168,8 +168,10 @@ def apply_audio_action(orig_path, target_path, a_idx, lang, codec, bitrate, chan
         cmd += ["-ignore_unknown", "-dn", "-write_tmcd", "0", out_file, "-y"]
 
         try:
-            process = subprocess.Popen(cmd, stderr=subprocess.PIPE, universal_newlines=True, encoding='utf-8', errors='replace')
+            cflags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+            process = subprocess.Popen(cmd, stderr=subprocess.PIPE, universal_newlines=True, encoding='utf-8', errors='replace', creationflags=cflags)
             time_pattern = re.compile(r"time=(\d{2}):(\d{2}):(\d{2}\.\d+)")
+            
             for line in process.stderr:
                 match = time_pattern.search(line)
                 if match and duration > 0:
@@ -439,7 +441,8 @@ def execute_bulk_process(planned_changes, sim_win):
             cmd += ["-ignore_unknown", "-dn", "-write_tmcd", "0", out_file, "-y", "-loglevel", "error"]
 
             try:
-                subprocess.run(cmd, check=True)
+                cflags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+                subprocess.run(cmd, check=True, creationflags=cflags)
                 shutil.copystat(filepath, out_file)
                 if do_backup: os.rename(filepath, f"{filepath}.orig")
                 else: os.remove(filepath)
