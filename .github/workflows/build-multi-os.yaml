@@ -1,0 +1,69 @@
+name: Build Multi-OS Binaries
+
+on:
+  release:
+    types: [published, edited, created]
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: MediaFixer-windows
+            is_windows: true
+          - os: ubuntu-latest
+            artifact_name: MediaFixer-linux
+            is_windows: false
+
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install customtkinter pyinstaller
+
+    - name: Build with PyInstaller
+      shell: bash
+      run: |
+        TK_PATH=$(python -c "import customtkinter; import os; print(os.path.dirname(customtkinter.__file__))")
+        
+        # Windows nutzt --onedir (default), Linux bleibt bei --onefile
+        BUILD_MODE="--onefile"
+        if [ "${{ matrix.is_windows }}" = "true" ]; then
+          BUILD_MODE="--onedir"
+        fi
+
+        pyinstaller --noconsole $BUILD_MODE --name "${{ matrix.artifact_name }}" \
+        --add-data "locales$(if [ "${{ matrix.is_windows }}" = "true" ]; then echo ';'; else echo ':'; fi)locales" \
+        --add-data "audio_flags.json$(if [ "${{ matrix.is_windows }}" = "true" ]; then echo ';'; else echo ':'; fi)." \
+        --add-data "${TK_PATH}$(if [ "${{ matrix.is_windows }}" = "true" ]; then echo ';'; else echo ':'; fi)customtkinter" \
+        main.py
+
+    - name: Zip Windows Artifact
+      if: matrix.is_windows == true
+      shell: pwsh
+      run: Compress-Archive -Path dist/MediaFixer-windows -DestinationPath dist/MediaFixer-windows.zip
+
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v2
+      with:
+        # Lädt für Windows die ZIP hoch, für Linux das Binary
+        files: |
+          ${{ matrix.is_windows == true && 'dist/MediaFixer-windows.zip' || 'dist/MediaFixer-linux' }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

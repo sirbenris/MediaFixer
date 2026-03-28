@@ -34,5 +34,7 @@ If you downloaded the standalone version from the [Releases](https://github.com/
 4. Check the box "Allow executing file as program".
 5. Close and double-click the file to launch.
 
+"Note: Some Antivirus engines might flag the EXE as a false positive due to the PyInstaller packaging. This is a known issue with non-signed Python executables."
+
 ## ⚖️ License
 MIT - Built by Benris
