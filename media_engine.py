@@ -27,15 +27,40 @@ def download_ffmpeg_windows(status_callback):
         if not os.path.exists(BIN_DIR):
             os.makedirs(BIN_DIR)
         
-        status_callback("Downloading FFmpeg... ⏳")
-        with urllib.request.urlopen(url) as response:
-            with zipfile.ZipFile(io.BytesIO(response.read())) as z:
-                for file_info in z.infolist():
-                    if file_info.filename.endswith(("ffmpeg.exe", "ffprobe.exe")):
-                        file_info.filename = os.path.basename(file_info.filename)
-                        z.extract(file_info, BIN_DIR)
+        status_callback("Downloading FFmpeg... 0% ⏳")
+        
+        # Die Datei aufrufen
+        req = urllib.request.urlopen(url)
+        total_size = int(req.headers.get('content-length', 0))
+        downloaded = 0
+        chunk_size = 1024 * 1024  # 1 MB große "Häppchen"
+        data = bytearray()
+        
+        # Stück für Stück herunterladen
+        while True:
+            chunk = req.read(chunk_size)
+            if not chunk:
+                break
+            data.extend(chunk)
+            downloaded += len(chunk)
+            
+            # Prozentzahl berechnen und ans UI schicken
+            if total_size > 0:
+                percent = int((downloaded / total_size) * 100)
+                status_callback(f"Downloading FFmpeg... {percent}% ⏳")
+        
+        status_callback("Extracting files... 📦")
+        
+        # Die gesammelten Daten im RAM entpacken
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            for file_info in z.infolist():
+                if file_info.filename.endswith(("ffmpeg.exe", "ffprobe.exe")):
+                    file_info.filename = os.path.basename(file_info.filename)
+                    z.extract(file_info, BIN_DIR)
+                    
         update_ffmpeg_paths()
         return True
+        
     except Exception as e:
         print(f"Download error: {e}")
         return False
