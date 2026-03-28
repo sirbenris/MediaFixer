@@ -1,40 +1,63 @@
-# 🎬 Media Fixer
+🎬 MediaFixer
+MediaFixer is a powerful, user-friendly tool designed to clean up and standardize your media library. It automatically fixes audio streams, removes unwanted metadata, and ensures your files are compatible with all modern players.
 
-A powerful and modular desktop application to analyze and repair audio streams in MP4 and MKV files. Built with Python and CustomTkinter.
+!
 
-## ✨ Key Features
-- **Batch Processing:** Fix entire folders or seasons at once.
-- **Simulation Mode:** Professional dry-run preview before touching any file.
-- **Smart Filtering:** Isolate files by language flags, codecs, or bitrates.
-- **Auto-Download:** Installs FFmpeg automatically for Windows users.
-- **Safety First:** Includes `.orig` backups.
+✨ Key Features
+Automated FFmpeg Setup: No manual installation required. The built-in Setup Wizard handles everything for you.
 
-## 🚀 Setup & Run
-1. `git clone https://github.com/benris/MediaFixer.git`
-2. `pip install customtkinter`
-3. `python main.py`
+Multi-Platform Support: Native builds for Windows (ZIP) and Linux.
 
-## OR DOWNLOAD AT RELEASES PAGE (https://github.com/sirbenris/MediaFixer/releases)
+Batch Processing: Fix entire folders of movies or TV shows at once.
 
-## 📦 Running the Pre-built Binary (Linux)
+Smart Metadata Filtering: Cleans title tags and unwanted stream information.
 
-If you downloaded the standalone version from the [Releases](https://github.com/sirbenris/MediaFixer/releases) page, you might need to give it execution permissions first:
+Non-Destructive: Uses a simulation mode to show you changes before they happen.
 
-### Option 1: Using the Terminal (Recommended)
-1. Open your terminal in the download folder.
-2. Make the file executable:
-   chmod +x MediaFixer
-3. Run it:
-   ./MediaFixer
+Multilingual: Supports English and German (automatically detects system language).
 
-### Option 2: Using the GUI
-1. Right-click the MediaFixer file.
-2. Select Properties.
-3. Go to the Permissions tab.
-4. Check the box "Allow executing file as program".
-5. Close and double-click the file to launch.
+🚀 Installation & Usage
+Windows (Recommended)
+Go to the Releases page.
 
-"Note: Some Antivirus engines might flag the EXE as a false positive due to the PyInstaller packaging. This is a known issue with non-signed Python executables."
+Download MediaFixer-windows.zip.
 
-## ⚖️ License
-MIT - Built by Benris
+Right-click the ZIP file and select "Extract All...".
+
+Open the folder and run MediaFixer-windows.exe.
+
+Follow the Setup Wizard to download FFmpeg automatically.
+
+Linux
+Download the MediaFixer-linux binary from the Releases page.
+
+Give it execution permissions:
+
+Bash
+chmod +x MediaFixer-linux
+Run it: ./MediaFixer-linux
+
+🛠 For Developers
+If you want to run the code from source:
+
+Clone the repository:
+
+Bash
+git clone https://github.com/benris/MediaFixer.git
+cd MediaFixer
+Create a virtual environment:
+
+Bash
+python -m venv .venv
+source .venv/bin/activate  # Linux
+.\.venv\Scripts\activate   # Windows
+Install dependencies:
+
+Bash
+pip install customtkinter
+Run the app:
+
+Bash
+python main.py
+🛡️ Antivirus Note (Windows)
+Since this executable is not digitally signed, Windows Defender or Edge might flag it as "unrecognized". This is a common issue with Python-based tools. You can safely click "Run anyway" or "Keep file". The source code is fully open for inspection.
