@@ -15,12 +15,14 @@ jobs:
         include:
           - os: windows-latest
             artifact_name: "MediaFixer-windows"
-            # Windows bekommt den Ordner-Modus
-            pyinstaller_args: "--onedir" 
+            pyinstaller_mode: "--onedir"
+            sep: ";"
+            upload_path: "dist/MediaFixer-windows.zip"
           - os: ubuntu-latest
             artifact_name: "MediaFixer-linux"
-            # Linux bleibt bei der einzelnen Datei
-            pyinstaller_args: "--onefile"
+            pyinstaller_mode: "--onefile"
+            sep: ":"
+            upload_path: "dist/MediaFixer-linux"
 
     steps:
     - name: Checkout Code
@@ -39,30 +41,26 @@ jobs:
     - name: Build with PyInstaller
       shell: bash
       run: |
-        # Pfad-Trenner ermitteln (; für Win, : für Linux)
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then SEP=";"; else SEP=":"; fi
-        
         TK_PATH=$(python -c "import customtkinter; import os; print(os.path.dirname(customtkinter.__file__))")
         
-        pyinstaller --noconsole ${{ matrix.pyinstaller_args }} --name "${{ matrix.artifact_name }}" \
-        --add-data "locales${SEP}locales" \
-        --add-data "audio_flags.json${SEP}." \
-        --add-data "${TK_PATH}${SEP}customtkinter" \
+        # PyInstaller wird exakt mit dem Modus aus der Matrix gefüttert
+        pyinstaller --noconsole ${{ matrix.pyinstaller_mode }} --name "${{ matrix.artifact_name }}" \
+        --add-data "locales${{ matrix.sep }}locales" \
+        --add-data "audio_flags.json${{ matrix.sep }}." \
+        --add-data "${TK_PATH}${{ matrix.sep }}customtkinter" \
         main.py
 
-    # DIESER SCHRITT IST NUR FÜR WINDOWS
     - name: Zip Windows Folder
       if: matrix.os == 'windows-latest'
       shell: pwsh
       run: |
-        # Wir zippen den kompletten Ordner aus dem 'dist' Verzeichnis
+        # Zippt den frisch erstellten Ordner
         Compress-Archive -Path "dist/MediaFixer-windows" -DestinationPath "dist/MediaFixer-windows.zip" -Force
 
-    # DIESER SCHRITT LÄDT DIE DATEIEN HOCH
     - name: Upload Release Assets
       uses: softprops/action-gh-release@v2
       with:
-        files: |
-          ${{ matrix.os == 'windows-latest' && 'dist/MediaFixer-windows.zip' || 'dist/MediaFixer-linux' }}
+        # Hier nimmt er jetzt stur den Pfad, der oben in der Matrix steht!
+        files: ${{ matrix.upload_path }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
