@@ -499,28 +499,63 @@ tabview.pack(padx=20, pady=20, fill="both", expand=True)
 tab_single = tabview.add(texts.get("tab_single", "Single File"))
 tab_bulk = tabview.add(texts.get("tab_bulk", "Bulk"))
 
-# --- Tab 1 (Single) ---
-customtkinter.CTkLabel(tab_single, text=texts.get("lbl_single", "Inspector"), font=("Arial", 20, "bold")).pack(pady=10)
+# ==========================================
+# --- Tab 1: Single File Processing ---
+# ==========================================
 
-frame_save_mode = customtkinter.CTkFrame(tab_single, fg_color="transparent")
+# Main scrollable container for the single file tab
+scroll_single = customtkinter.CTkScrollableFrame(tab_single, fg_color="transparent")
+scroll_single.pack(fill="both", expand=True, padx=0, pady=0)
+
+customtkinter.CTkLabel(scroll_single, text=texts.get("lbl_single", "Inspector"), font=("Arial", 22, "bold")).pack(pady=(10, 20))
+
+# --- Section 1: File Selection & Save Mode ---
+# Card for file selection and output configuration
+frame_file_ops = customtkinter.CTkFrame(scroll_single, corner_radius=10, border_width=1)
+frame_file_ops.pack(fill="x", padx=30, pady=10)
+
+customtkinter.CTkLabel(frame_file_ops, text="File Selection", font=("Arial", 16, "bold"), text_color="#3a7ebf").pack(anchor="w", padx=15, pady=(15, 5))
+
+# Save mode radio buttons
+frame_save_mode = customtkinter.CTkFrame(frame_file_ops, fg_color="transparent")
 frame_save_mode.pack(pady=5)
 var_save_mode = customtkinter.StringVar(value="inline")
-customtkinter.CTkRadioButton(frame_save_mode, text=texts.get("mode_inline", "Overwrite"), variable=var_save_mode, value="inline").pack(side="left", padx=10)
-customtkinter.CTkRadioButton(frame_save_mode, text=texts.get("mode_newfile", "Save As"), variable=var_save_mode, value="newfile").pack(side="left", padx=10)
+customtkinter.CTkRadioButton(frame_save_mode, text=texts.get("mode_inline", "Overwrite"), variable=var_save_mode, value="inline").pack(side="left", padx=15)
+customtkinter.CTkRadioButton(frame_save_mode, text=texts.get("mode_newfile", "Save As"), variable=var_save_mode, value="newfile").pack(side="left", padx=15)
 
-btn_select_file = customtkinter.CTkButton(tab_single, text=texts.get("btn_file", "Select File"), command=select_single_file)
-btn_select_file.pack(pady=10)
+# Selection button and file path display
+btn_select_file = customtkinter.CTkButton(frame_file_ops, text=texts.get("btn_file", "Select File"), font=("Arial", 14, "bold"), command=select_single_file)
+btn_select_file.pack(pady=15)
 
-lbl_selected_file = customtkinter.CTkLabel(tab_single, text=texts.get("lbl_no_file", "-"), font=("Arial", 14, "italic"), text_color="gray")
-lbl_selected_file.pack()
+lbl_selected_file = customtkinter.CTkLabel(frame_file_ops, text=texts.get("lbl_no_file", "-"), font=("Arial", 13, "italic"), text_color="gray")
+lbl_selected_file.pack(pady=(0, 15))
 
-header_frame = customtkinter.CTkFrame(tab_single, fg_color="transparent")
-header_frame.pack(fill="x", padx=15, pady=(15, 0))
-for col, w in [(texts.get("col_lang", "Lang"), 110), (texts.get("col_codec", "Codec"), 85), (texts.get("col_bitrate", "Bitrate"), 100), (texts.get("col_channels", "Ch"), 130), (texts.get("col_action", "Action"), 130)]:
-    customtkinter.CTkLabel(header_frame, text=col, width=w, anchor="w").pack(side="left", padx=2)
+# --- Section 2: Audio Stream Inspector ---
+# Card for displaying analyzed audio tracks
+frame_inspector = customtkinter.CTkFrame(scroll_single, corner_radius=10, border_width=1)
+frame_inspector.pack(fill="both", expand=True, padx=30, pady=10)
 
-scroll_table = customtkinter.CTkScrollableFrame(tab_single, fg_color="transparent")
-scroll_table.pack(padx=10, pady=(0, 10), fill="both", expand=True)
+customtkinter.CTkLabel(frame_inspector, text="Audio Streams", font=("Arial", 16, "bold"), text_color="#3a7ebf").pack(anchor="w", padx=15, pady=(15, 5))
+
+# Table header for stream information
+header_frame = customtkinter.CTkFrame(frame_inspector, fg_color="transparent")
+header_frame.pack(fill="x", padx=15, pady=(5, 0))
+
+# Define column headers based on current configuration
+header_cols = [
+    (texts.get("col_lang", "Lang"), 110), 
+    (texts.get("col_codec", "Codec"), 85), 
+    (texts.get("col_bitrate", "Bitrate"), 100), 
+    (texts.get("col_channels", "Ch"), 130), 
+    (texts.get("col_action", "Action"), 130)
+]
+
+for col, w in header_cols:
+    customtkinter.CTkLabel(header_frame, text=col, width=w, anchor="w", font=("Arial", 12, "bold")).pack(side="left", padx=2)
+
+# Dynamic list of audio tracks
+scroll_table = customtkinter.CTkScrollableFrame(frame_inspector, fg_color="transparent", height=400)
+scroll_table.pack(padx=10, pady=(5, 15), fill="both", expand=True)
 
 # ==========================================
 # --- Tab 2: Bulk Processing ---
