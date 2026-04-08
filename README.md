@@ -32,5 +32,50 @@ If you are tired of seeing "Unknown" audio tracks, dealing with incompatible aud
 1. Go to the [Releases page](../../releases/latest).
 2. Download the `MediaFixer-linux` binary.
 3. Open your terminal and give it execution permissions:
-   ```bash
-   chmod +x MediaFixer-linux
+
+       chmod +x MediaFixer-linux
+
+4. Run the application:
+
+       ./MediaFixer-linux
+
+5. *Note: Please ensure `ffmpeg` is installed on your system (e.g., `sudo apt install ffmpeg`).*
+
+---
+
+## 🛠 For Developers (Running from Source)
+
+Want to tweak the code or build it yourself? No problem!
+
+1. Clone the repository:
+
+       git clone https://github.com/sirbenris/MediaFixer.git
+       cd MediaFixer
+
+2. Create and activate a virtual environment:
+
+       python -m venv .venv
+       source .venv/bin/activate  # On Linux
+       .\.venv\Scripts\activate   # On Windows
+
+3. Install the required dependencies:
+
+       pip install customtkinter pymediainfo
+
+4. Run the app:
+
+       python main.py
+
+---
+
+## 🛡️ Important Notes & Legal
+
+### Antivirus False Positives (Windows)
+Because this application is compiled using `PyInstaller` and is not digitally signed with an expensive enterprise certificate, Windows Defender or your browser might flag the `.exe` file as "unrecognized" or potentially unsafe. **This is a known, common false positive for Python-based standalone executables.** You can safely click *More info -> Run anyway*. The complete source code is available here for inspection.
+
+### Third-Party Acknowledgments
+* **FFmpeg:** This software uses code of [FFmpeg](http://ffmpeg.org) licensed under the LGPLv2.1 and its source can be downloaded from their website.
+* **MediaInfo:** This software utilizes `pymediainfo` and the `MediaInfo` library (licensed under the BSD-2-Clause license) for robust metadata extraction.
+
+### Disclaimer
+*This tool modifies media files. While it includes a backup option and a simulation mode, the software is provided "as is", without warranty of any kind. Always ensure you have backups of your critical media files before performing bulk operations.*
