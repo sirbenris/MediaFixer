@@ -79,5 +79,8 @@
     "lbl_if_bitrate": "Wenn Bitrate (kbps):",
     "lbl_bulk_what": "3. Was soll gemacht werden? (Aktion)",
     "lbl_settings": "4. Start & Backup",
-    "warn_no_folder": "Bitte wähle zuerst einen Ordner aus!"
+    "warn_no_folder": "Bitte wähle zuerst einen Ordner aus!",
+    "lbl_title": "Titel",
+    "lbl_set_title": "Titel (Leer lassen um original beizubehalten)",
+    "chk_clear_handler": "Feld handler_name leeren (z.b. Encodertexte oder sonstiger Datenmüll)"
 }

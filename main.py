@@ -18,7 +18,7 @@ import media_engine
 customtkinter.set_appearance_mode("dark")
 
 # Loads custom theme JSON instead of standard colors.
-customtkinter.set_default_color_theme("rime.json")
+customtkinter.set_default_color_theme(config.resource_path("rime.json"))
 
 app = customtkinter.CTk()
 app.geometry("1100x900")
@@ -55,10 +55,13 @@ var_bulk_bit = None
 var_bulk_chan = None
 var_bulk_act = None
 var_bulk_backup = None
+var_bulk_title = None
+var_bulk_clear_handler = None
 btn_bulk_go = None
 bulk_prog_bar = None
 lbl_bulk_status = None
 bulk_target_folder = ""
+
 
 # --- Helper Functions ---
 def update_main_status():
@@ -143,7 +146,7 @@ def select_single_file():
     )
     if filepath: analyze_file(filepath)
 
-def apply_audio_action(orig_path, target_path, a_idx, lang, codec, bitrate, channels, action, btn, total, duration, p_f, p_b, p_l, mode):
+def apply_audio_action(orig_path, target_path, a_idx, lang, codec, bitrate, channels, action, title_val, clear_handler, btn, total, duration, p_f, p_b, p_l, mode):
     def task():
         app.after(0, lambda: p_f.pack(side="top", fill="x", padx=10, pady=(0, 10)))
         app.after(0, lambda: btn.configure(state="disabled", text=texts.get("status_fixing", "Processing...")))
@@ -159,6 +162,8 @@ def apply_audio_action(orig_path, target_path, a_idx, lang, codec, bitrate, chan
             if codec != "Copy" and bitrate != "Original": cmd += [f"-b:a:{a_idx}", bitrate]
             if channels == "Stereo Downmix": cmd += [f"-ac:a:{a_idx}", "2"]
             cmd += [f"-metadata:s:a:{a_idx}", f"language={lang}"]
+            cmd += [f"-metadata:s:a:{a_idx}", f"title={title_val}"]
+            if clear_handler: cmd += [f"-metadata:s:a:{a_idx}", "handler_name="]
         elif action == "Add New":
             cmd += ["-map", f"0:a:{a_idx}"]
             c_val = codec.lower() if codec != "Copy" else "copy"
@@ -166,6 +171,8 @@ def apply_audio_action(orig_path, target_path, a_idx, lang, codec, bitrate, chan
             if codec != "Copy" and bitrate != "Original": cmd += [f"-b:a:{total}", bitrate]
             if channels == "Stereo Downmix": cmd += [f"-ac:a:{total}", "2"]
             cmd += [f"-metadata:s:a:{total}", f"language={lang}"]
+            cmd += [f"-metadata:s:a:{total}", f"title={title_val}"]
+            if clear_handler: cmd += [f"-metadata:s:a:{total}", "handler_name="]
 
         cmd += ["-ignore_unknown", "-dn", "-write_tmcd", "0", out_file, "-y"]
 
@@ -195,14 +202,14 @@ def apply_audio_action(orig_path, target_path, a_idx, lang, codec, bitrate, chan
 
     threading.Thread(target=task, daemon=True).start()
 
-def on_go_clicked(filepath, a_idx, var_lang, var_codec, var_bit, var_chan, var_act, btn, total, dur, p_f, p_b, p_l):
+def on_go_clicked(filepath, a_idx, var_lang, var_codec, var_bit, var_chan, var_act, var_title, var_clear, btn, total, dur, p_f, p_b, p_l):
     mode = var_save_mode.get()
     target = filepath
     if mode == "newfile":
         target = filedialog.asksaveasfilename(title=texts.get("dialog_save_as", "Save As..."), initialfile=f"fixed_{os.path.basename(filepath)}", defaultextension=".mp4")
         if not target: return
     act_map_rev = {texts.get("btn_action_patch", "Patch"): "Patch", texts.get("btn_action_add", "Add New"): "Add New", texts.get("btn_action_delete", "Delete"): "Delete"}
-    apply_audio_action(filepath, target, a_idx, AUDIO_FLAGS[var_lang.get()], var_codec.get(), var_bit.get(), var_chan.get(), act_map_rev[var_act.get()], btn, total, dur, p_f, p_b, p_l, mode)
+    apply_audio_action(filepath, target, a_idx, AUDIO_FLAGS[var_lang.get()], var_codec.get(), var_bit.get(), var_chan.get(), act_map_rev[var_act.get()], var_title.get(), var_clear.get(), btn, total, dur, p_f, p_b, p_l, mode)
 
 def analyze_file(filepath):
     for widget in scroll_table.winfo_children(): widget.destroy()
@@ -227,15 +234,17 @@ def analyze_file(filepath):
         channels_orig = stream.get("channels", "?")
         bps = stream.get("bit_rate") or tags.get("BPS")
         bitrate_kbps = f"{int(bps)//1000} kbps" if str(bps).isdigit() else texts.get("unknown_bitrate", "???")
+        track_title = tags.get("title", "")
+        title_display = f" - '{track_title}'" if track_title else ""
         
         row = customtkinter.CTkFrame(scroll_table, fg_color=("gray80", "gray20"))
         row.pack(fill="x", pady=5, padx=5)
 
-        info_text = f"🎵 #{a_idx} | [{lang_orig}] | {codec_orig} | {bitrate_kbps} | {channels_orig} Ch"
+        info_text = f"🎵 #{a_idx} | [{lang_orig}] | {codec_orig} | {bitrate_kbps} | {channels_orig} Ch{title_display}"
         customtkinter.CTkLabel(row, text=info_text, font=("Arial", 11, "bold"), text_color="gray70").pack(side="top", anchor="w", padx=10, pady=2)
-
+        
         ctrl = customtkinter.CTkFrame(row, fg_color="transparent")
-        ctrl.pack(side="top", fill="x", padx=5, pady=5)
+        ctrl.pack(side="top", fill="x", padx=5, pady=2)
 
         v_lang = customtkinter.StringVar(value=[k for k,v in AUDIO_FLAGS.items() if v == lang_orig][0] if lang_orig in AUDIO_FLAGS.values() else "English")
         customtkinter.CTkOptionMenu(ctrl, values=config.available_flags, variable=v_lang, width=110).pack(side="left", padx=2)
@@ -248,13 +257,24 @@ def analyze_file(filepath):
         v_act = customtkinter.StringVar(value=list(act_map.keys())[0])
         customtkinter.CTkOptionMenu(ctrl, values=list(act_map.keys()), variable=v_act, width=130, button_color="darkblue").pack(side="left", padx=2)
 
+        # NEU: Zweite Zeile für Titel und Handler-Clear
+        ctrl2 = customtkinter.CTkFrame(row, fg_color="transparent")
+        ctrl2.pack(side="top", fill="x", padx=5, pady=(0, 5))
+        
+        customtkinter.CTkLabel(ctrl2, text=texts.get("lbl_title", "Title:")).pack(side="left", padx=(2, 5))
+        v_title = customtkinter.StringVar(value=track_title)
+        customtkinter.CTkEntry(ctrl2, textvariable=v_title, width=220).pack(side="left", padx=2)
+        
+        v_clear = customtkinter.BooleanVar(value=False)
+        customtkinter.CTkCheckBox(ctrl2, text=texts.get("chk_clear_handler", "Clear Handler Name"), variable=v_clear).pack(side="left", padx=15)
+
         p_f = customtkinter.CTkFrame(row, fg_color="transparent")
         p_b = customtkinter.CTkProgressBar(p_f, height=8); p_b.pack(side="left", fill="x", expand=True, padx=(0, 10)); p_b.set(0)
         p_l = customtkinter.CTkLabel(p_f, text="0%", font=("Arial", 10, "bold")); p_l.pack(side="right")
 
         btn_go = customtkinter.CTkButton(ctrl, text="GO", width=50, font=("Arial", 12, "bold"), fg_color="#1f538d")
-        btn_go.configure(command=lambda a=a_idx, l=v_lang, c=v_codec, b=v_bit, ch=v_chan, act=v_act, btn=btn_go, p_f=p_f, p_b=p_b, p_l=p_l: 
-            threading.Thread(target=lambda: on_go_clicked(filepath, a, l, c, b, ch, act, btn, len(streams), duration, p_f, p_b, p_l)).start()
+        btn_go.configure(command=lambda a=a_idx, l=v_lang, c=v_codec, b=v_bit, ch=v_chan, act=v_act, tit=v_title, clr=v_clear, btn=btn_go, p_f=p_f, p_b=p_b, p_l=p_l: 
+            threading.Thread(target=lambda: on_go_clicked(filepath, a, l, c, b, ch, act, tit, clr, btn, len(streams), duration, p_f, p_b, p_l)).start()
         )
         btn_go.pack(side="right", padx=5)
 
@@ -417,6 +437,8 @@ def execute_bulk_process(planned_changes, sim_win):
             
             target_lang_code = AUDIO_FLAGS.get(var_bulk_lang.get(), "und")
             action = var_bulk_act.get()
+            title_val = var_bulk_title.get()
+            clear_handler = var_bulk_clear_handler.get()
             
             out_file = f"{filepath}.temp.mp4"
             cmd = [media_engine.FFMPEG_CMD, "-nostdin", "-i", filepath, "-map", "0", "-c", "copy"]
@@ -430,6 +452,8 @@ def execute_bulk_process(planned_changes, sim_win):
                     if var_bulk_codec.get() != "Copy" and var_bulk_bit.get() != "Original": cmd += [f"-b:a:{t_idx}", var_bulk_bit.get()]
                     if var_bulk_chan.get() == "Stereo Downmix": cmd += [f"-ac:a:{t_idx}", "2"]
                     cmd += [f"-metadata:s:a:{t_idx}", f"language={target_lang_code}"]
+                    if title_val: cmd += [f"-metadata:s:a:{t_idx}", f"title={title_val}"]
+                    if clear_handler: cmd += [f"-metadata:s:a:{t_idx}", "handler_name="]
             elif action == texts.get("btn_action_add", "Add New"):
                 for idx_offset, t_idx in enumerate(matched_indices):
                     new_idx = total_audio + idx_offset
@@ -439,6 +463,8 @@ def execute_bulk_process(planned_changes, sim_win):
                     if var_bulk_codec.get() != "Copy" and var_bulk_bit.get() != "Original": cmd += [f"-b:a:{new_idx}", var_bulk_bit.get()]
                     if var_bulk_chan.get() == "Stereo Downmix": cmd += [f"-ac:a:{new_idx}", "2"]
                     cmd += [f"-metadata:s:a:{new_idx}", f"language={target_lang_code}"]
+                    if title_val: cmd += [f"-metadata:s:a:{new_idx}", f"title={title_val}"]
+                    if clear_handler: cmd += [f"-metadata:s:a:{new_idx}", "handler_name="]
 
             cmd += ["-ignore_unknown", "-dn", "-write_tmcd", "0", out_file, "-y", "-loglevel", "error"]
 
@@ -630,7 +656,7 @@ frame_action.pack(fill="x", padx=30, pady=10)
 customtkinter.CTkLabel(frame_action, text=texts.get("lbl_bulk_what", "3. What to do? (Action)"), font=("Arial", 16, "bold"), text_color="#3a7ebf").pack(anchor="w", padx=15, pady=(15, 5))
 
 a_row1 = customtkinter.CTkFrame(frame_action, fg_color="transparent")
-a_row1.pack(fill="x", padx=15, pady=(5, 15))
+a_row1.pack(fill="x", padx=15, pady=5)
 
 # Processing action parameters
 bulk_acts = [texts.get("btn_action_patch", "Patch"), texts.get("btn_action_add", "Add New"), texts.get("btn_action_delete", "Delete")]
@@ -644,6 +670,16 @@ var_bulk_bit = customtkinter.StringVar(value="Original")
 customtkinter.CTkOptionMenu(a_row1, values=config.BITRATE_OPTIONS, variable=var_bulk_bit, width=100, fg_color="gray30").pack(side="left", padx=2)
 var_bulk_chan = customtkinter.StringVar(value="Original")
 customtkinter.CTkOptionMenu(a_row1, values=config.CHANNEL_OPTIONS, variable=var_bulk_chan, width=130, fg_color="gray30").pack(side="left", padx=2)
+
+a_row2 = customtkinter.CTkFrame(frame_action, fg_color="transparent")
+a_row2.pack(fill="x", padx=15, pady=(5, 15))
+
+customtkinter.CTkLabel(a_row2, text=texts.get("lbl_set_title", "Set Title (Leave empty to keep original):")).pack(side="left", padx=(2, 5))
+var_bulk_title = customtkinter.StringVar(value="")
+customtkinter.CTkEntry(a_row2, textvariable=var_bulk_title, width=250, placeholder_text=texts.get("plc_keep_title", "Leave empty to keep original")).pack(side="left", padx=5)
+
+var_bulk_clear_handler = customtkinter.BooleanVar(value=False)
+customtkinter.CTkCheckBox(a_row2, text=texts.get("chk_clear_handler", "Clear Handler Name"), variable=var_bulk_clear_handler).pack(side="left", padx=15)
 
 # --- Section 4: Start & Execution ---
 frame_start = customtkinter.CTkFrame(scroll_bulk, fg_color="transparent")

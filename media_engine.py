@@ -7,6 +7,7 @@ import urllib.request
 import zipfile
 import io
 from config import BIN_DIR
+from pymediainfo import MediaInfo
 
 FFMPEG_CMD = "ffmpeg"
 FFPROBE_CMD = "ffprobe"
@@ -68,11 +69,31 @@ def download_ffmpeg_windows(status_callback):
 def probe_file(filepath):
     cmd = [FFPROBE_CMD, "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", "-select_streams", "a", filepath]
     
-    # Der Ninja-Modus: Nur für Windows aktivieren!
+    # Enable ninja mode on Windows
     cflags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True, creationflags=cflags)
-        return json.loads(result.stdout)
+        data = json.loads(result.stdout)
+        
+        # --- NEW: Use MediaInfo to extract robust track titles ---
+        try:
+            media_info = MediaInfo.parse(filepath)
+            # Filter only audio tracks
+            audio_tracks = [t for t in media_info.tracks if t.track_type == "Audio"]
+            
+            # Inject MediaInfo titles into the ffprobe data structure
+            for i, stream in enumerate(data.get("streams", [])):
+                if i < len(audio_tracks):
+                    track_title = audio_tracks[i].title
+                    if track_title:
+                        if "tags" not in stream:
+                            stream["tags"] = {}
+                        # Overwrite or create the title tag
+                        stream["tags"]["title"] = track_title
+        except Exception as e:
+            print(f"MediaInfo extraction failed: {e}")
+            
+        return data
     except:
         return None
