@@ -339,11 +339,21 @@ def simulate_bulk_process():
     if not bulk_target_folder: 
         messagebox.showwarning(texts.get("warn_title", "Warning"), texts.get("warn_no_folder", "Please select a folder first!"))
         return
+        
+    # --- NEU: Warnung, falls "Alle Audiostreams" ausgewählt ist ---
+    if var_bulk_track.get() == texts.get("opt_all_audio", "All Audio Streams"):
+        confirm_all = messagebox.askyesno(
+            texts.get("warn_title", "Warning"), 
+            texts.get("warn_all_audio", "You selected 'All Audio Streams'. This will modify EVERY matching track. Proceed?")
+        )
+        if not confirm_all: 
+            return
     
+    # Check für Backup-Warnung
     do_backup = bool(var_bulk_backup.get())
     if not do_backup:
-        confirm = messagebox.askyesno(texts.get("warn_title", "Warning"), texts.get("warn_msg", "Proceed without backups?"))
-        if not confirm: return
+        confirm_backup = messagebox.askyesno(texts.get("warn_title", "Warning"), texts.get("warn_msg", "Proceed without backups?"))
+        if not confirm_backup: return
 
     def task():
         app.after(0, lambda: btn_bulk_go.configure(state="disabled"))
