@@ -311,6 +311,7 @@ def match_bulk_streams(filepath):
         if track_sel != texts.get("opt_all_audio", "All Audio") and a_idx not in target_tracks: continue
 
         tags = stream.get("tags", {})
+        # Check Conditions
         if var_cond_lang_en.get() and tags.get("language", "und") != AUDIO_FLAGS.get(var_cond_lang_val.get(), "und"): continue
         if var_cond_codec_en.get() and stream.get("codec_name", "unk").upper() != var_cond_codec_val.get(): continue
         if var_cond_bit_en.get():
@@ -319,8 +320,16 @@ def match_bulk_streams(filepath):
             target_bps = var_cond_bit_val.get().strip()
             if target_bps and target_bps != kbps: continue
 
+        # Smart Skip Logic: Only skip if ALL requested changes are already present!
         if var_bulk_skip.get() and var_bulk_act.get() == texts.get("btn_action_patch", "Patch"):
-            if tags.get("language", "und") == AUDIO_FLAGS.get(var_bulk_lang.get(), "und"): continue
+            already_lang = tags.get("language", "und") == AUDIO_FLAGS.get(var_bulk_lang.get(), "und")
+            already_codec = (var_bulk_codec.get() == "Copy") or (stream.get("codec_name", "unk").upper() == var_bulk_codec.get().upper())
+            already_title = (not var_bulk_title.get()) or (tags.get("title", "") == var_bulk_title.get())
+            already_handler = (not var_bulk_clear_handler.get()) or ("handler_name" not in tags)
+            
+            # If everything is already as the user wants it, skip this stream
+            if already_lang and already_codec and already_title and already_handler:
+                continue
 
         matched.append(a_idx)
     
@@ -345,9 +354,10 @@ def simulate_bulk_process():
         if not var_bulk_case.get(): name_filter = name_filter.lower()
             
         action = var_bulk_act.get()
-        if action == texts.get("btn_action_patch", "Patch"): act_prefix = texts.get("status_action_patch", "Patching")
-        elif action == texts.get("btn_action_delete", "Delete"): act_prefix = texts.get("status_action_delete", "Deleting")
-        else: act_prefix = texts.get("status_action_add", "Adding")
+        target_lang_code = AUDIO_FLAGS.get(var_bulk_lang.get(), "und")
+        codec_val = var_bulk_codec.get()
+        title_val = var_bulk_title.get()
+        clear_handler = var_bulk_clear_handler.get()
         
         files_to_process = []
         if var_bulk_sub.get():
@@ -382,10 +392,23 @@ def simulate_bulk_process():
         for i, filepath in enumerate(filtered_files):
             matched_indices, total_audio = match_bulk_streams(filepath)
             if matched_indices:
-                for idx in matched_indices:
-                    desc = f"{act_prefix} Track #{idx} -> [{AUDIO_FLAGS.get(var_bulk_lang.get(), 'und')}]"
-                    planned_changes.append({"filepath": filepath, "desc": desc, "matched_indices": matched_indices, "total_audio": total_audio})
-                    break 
+                # Format exactly what tracks are affected (e.g. "0, 1")
+                tracks_str = ", ".join(str(idx) for idx in matched_indices)
+                
+                if action == texts.get("btn_action_delete", "Delete"):
+                    desc = f"Delete Track(s) #{tracks_str}"
+                else:
+                    act_word = "Patch" if action == texts.get("btn_action_patch", "Patch") else "Add"
+                    # Build dynamic description based on user inputs
+                    desc_parts = [f"{act_word} #{tracks_str} -> [{target_lang_code}]"]
+                    if codec_val != "Copy": desc_parts.append(f"Codec: {codec_val}")
+                    if title_val: desc_parts.append(f"Title: '{title_val}'")
+                    if clear_handler: desc_parts.append("Clear Handler")
+                        
+                    desc = " | ".join(desc_parts)
+
+                planned_changes.append({"filepath": filepath, "desc": desc, "matched_indices": matched_indices, "total_audio": total_audio})
+                
             app.after(0, lambda p=(i+1)/total_files: bulk_prog_bar.set(p))
 
         app.after(0, lambda: show_simulation_popup(planned_changes))
