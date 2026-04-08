@@ -17,12 +17,10 @@ jobs:
             artifact_name: "MediaFixer-windows"
             pyinstaller_mode: "--onedir"
             sep: ";"
-            upload_path: "dist/MediaFixer-windows.zip"
           - os: ubuntu-latest
             artifact_name: "MediaFixer-linux"
             pyinstaller_mode: "--onefile"
             sep: ":"
-            upload_path: "dist/MediaFixer-linux"
 
     steps:
     - name: Checkout Code
@@ -38,13 +36,26 @@ jobs:
         python -m pip install --upgrade pip
         pip install customtkinter pyinstaller pymediainfo
 
+    - name: Inject Version and Set Env
+      shell: bash
+      run: |
+        # Version holen und evtl. v entfernen
+        TAG_NAME="${{ github.event.release.tag_name }}"
+        CLEAN_VERSION=${TAG_NAME#v}
+        
+        # APP_VERSION überschreiben
+        sed -i "s/APP_VERSION = .*/APP_VERSION = \"$CLEAN_VERSION\"/" config.py
+        
+        # version -> Umgebungsvariable
+        echo "CLEAN_VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
+        echo "Building MediaFixer version: $CLEAN_VERSION"
+
     - name: Build with PyInstaller
       shell: bash
       run: |
         TK_PATH=$(python -c "import customtkinter; import os; print(os.path.dirname(customtkinter.__file__))")
         
-        # PyInstaller wird exakt mit dem Modus aus der Matrix gefüttert
-        pyinstaller --noconsole ${{ matrix.pyinstaller_mode }} --name "${{ matrix.artifact_name }}" \
+        pyinstaller --noconsole ${{ matrix.pyinstaller_mode }} --name "${{ matrix.artifact_name }}-${{ env.CLEAN_VERSION }}" \
         --add-data "locales${{ matrix.sep }}locales" \
         --add-data "audio_flags.json${{ matrix.sep }}." \
         --add-data "rime.json${{ matrix.sep }}." \
@@ -56,13 +67,14 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: pwsh
       run: |
-        # Zippt den frisch erstellten Ordner
-        Compress-Archive -Path "dist/MediaFixer-windows" -DestinationPath "dist/MediaFixer-windows.zip" -Force
+        # versionierte zip erstellen
+        Compress-Archive -Path "dist/${{ matrix.artifact_name }}-${{ env.CLEAN_VERSION }}" -DestinationPath "dist/${{ matrix.artifact_name }}-${{ env.CLEAN_VERSION }}.zip" -Force
 
     - name: Upload Release Assets
       uses: softprops/action-gh-release@v2
       with:
-        # Hier nimmt er jetzt stur den Pfad, der oben in der Matrix steht!
-        files: ${{ matrix.upload_path }}
+        files: |
+          dist/${{ matrix.artifact_name }}-${{ env.CLEAN_VERSION }}
+          dist/${{ matrix.artifact_name }}-${{ env.CLEAN_VERSION }}.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -83,5 +83,7 @@
     "warn_no_folder": "Please select a folder first!",
     "lbl_title": "Title",
     "lbl_set_title": "Title (Leave empty to keep original)",
-    "chk_clear_handler": "Clear field 'handler_name' (Encoder artifacts or other data trash)"
+    "chk_clear_handler": "Clear field 'handler_name' (Encoder artifacts or other data trash)",
+    "update_title": "Update available!",
+    "update_msg": "A new version (v{v}) is available!\nDo you want to download it now?"
 }

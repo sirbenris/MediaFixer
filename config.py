@@ -12,11 +12,14 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 # --- Configuration & Paths ---
-# Diese Dateien werden später IN die .exe gepackt:
+# will be injected by github actions
+APP_VERSION ="dev"
+
+# include into exe
 LOCALES_DIR = resource_path("locales")
 FLAGS_FILE = resource_path("audio_flags.json")
 
-# Diese Dateien bleiben LOKAL neben der .exe:
+# include within package:
 CONFIG_FILE = "config.json" 
 BIN_DIR = "bin"
 

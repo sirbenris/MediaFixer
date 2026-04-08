@@ -83,5 +83,7 @@
     "warn_no_folder": "Bitte wähle zuerst einen Ordner aus!",
     "lbl_title": "Titel",
     "lbl_set_title": "Titel (Leer lassen um original beizubehalten)",
-    "chk_clear_handler": "Feld handler_name leeren (z.b. Encodertexte oder sonstiger Datenmüll)"
+    "chk_clear_handler": "Feld handler_name leeren (z.b. Encodertexte oder sonstiger Datenmüll)",
+    "update_title": "Update verfügbar!",
+    "update_msg": "Eine neue Version (v{v}) ist verfügbar!\nMöchtest du sie jetzt herunterladen?"
 }

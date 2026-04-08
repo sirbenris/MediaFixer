@@ -8,6 +8,9 @@ import subprocess
 import sys
 import re
 import platform
+import urllib.request
+import webbrowser
+import json
 
 # Import separated modules
 import config
@@ -64,6 +67,29 @@ bulk_target_folder = ""
 
 
 # --- Helper Functions ---
+def check_for_updates():
+    # Wir überspringen den Check, wenn du lokal in der "dev" Umgebung bist
+    if config.APP_VERSION == "dev":
+        return
+
+    try:
+        url = "https://api.github.com/repos/sirbenris/MediaFixer/releases/latest"
+        req = urllib.request.Request(url, headers={'User-Agent': 'MediaFixer-Update-Check'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode())
+            latest_version = data.get("tag_name", "").replace("v", "")
+            
+            # Einfache Stringprüfung
+            if latest_version and latest_version != config.APP_VERSION:
+                app.after(1500, lambda v=latest_version: show_update_popup(v))
+    except Exception as e:
+        print(f"Update check failed: {e}")
+
+def show_update_popup(new_version):
+    msg = texts.get("update_msg", f"A new version ({new_version}) is available!\nDo you want to download it?").replace("{v}", new_version)
+    if messagebox.askyesno(texts.get("update_title", "Update available!"), msg):
+        webbrowser.open("https://github.com/sirbenris/MediaFixer/releases/latest")
+
 def update_main_status():
     if not all([lbl_status_main, btn_select_file, btn_select_folder]): 
         return False
@@ -744,5 +770,8 @@ system_ready = update_main_status()
 
 if not os.path.exists(config.CONFIG_FILE) or not system_ready:
     app.after(100, show_setup_wizard)
+
+# check for update
+threading.Thread(target=check_for_updates, daemon=True).start()
 
 app.mainloop()
