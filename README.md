@@ -1,63 +1,36 @@
-🎬 MediaFixer
-MediaFixer is a powerful, user-friendly tool designed to clean up and standardize your media library. It automatically fixes audio streams, removes unwanted metadata, and ensures your files are compatible with all modern players.
+# 🎬 MediaFixer
 
-!
+![Downloads](https://img.shields.io/github/downloads/sirbenris/MediaFixer/total?style=for-the-badge&color=005FB8)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 
-✨ Key Features
-Automated FFmpeg Setup: No manual installation required. The built-in Setup Wizard handles everything for you.
+**MediaFixer** is a lightweight, zero-configuration desktop tool designed to clean up your media library before it hits your server (like Plex, Jellyfin, or Emby). 
 
-Multi-Platform Support: Native builds for Windows (ZIP) and Linux.
+If you are tired of seeing "Unknown" audio tracks, dealing with incompatible audio codecs causing unexpected transcoding, or finding weird encoder artifacts in your track titles, this tool is built for you.
 
-Batch Processing: Fix entire folders of movies or TV shows at once.
+## ✨ Key Features
 
-Smart Metadata Filtering: Cleans title tags and unwanted stream information.
+* **Bulk Audio Patching:** Convert all audio tracks in a folder to a specific codec (e.g., AC3, AAC), change bitrates, or force a stereo downmix for maximum compatibility.
+* **Fix Language Flags:** Batch-apply the correct language tags (English, German, etc.) so your media player automatically selects the right audio track.
+* **Metadata Scrubbing:** Easily rename track titles or completely clear out hidden data-trash like `handler_name` tags left behind by encoders.
+* **Safe Simulation Mode:** Never ruin your library. MediaFixer offers a simulation mode that previews every single planned change in a detailed log before a single byte is written to your drive.
+* **Zero Config Setup:** No need to mess with terminal commands or manually download FFmpeg. The built-in setup wizard handles everything for you on the first launch.
+* **Modern UI:** Built with an intuitive, dark-mode GUI (Rime Theme) that supports both English and German natively.
 
-Non-Destructive: Uses a simulation mode to show you changes before they happen.
+---
 
-Multilingual: Supports English and German (automatically detects system language).
+## 🚀 Installation & Usage
 
-🚀 Installation & Usage
-Windows (Recommended)
-Go to the Releases page.
+### 🪟 Windows (Recommended)
+1. Go to the [Releases page](../../releases/latest).
+2. Download the latest `MediaFixer-windows.zip`.
+3. Extract the ZIP file into a folder of your choice.
+4. Run `MediaFixer-windows.exe`. 
+5. *Note: On the first launch, the setup wizard will automatically download the required FFmpeg binaries into the folder.*
 
-Download MediaFixer-windows.zip.
-
-Right-click the ZIP file and select "Extract All...".
-
-Open the folder and run MediaFixer-windows.exe.
-
-Follow the Setup Wizard to download FFmpeg automatically.
-
-Linux
-Download the MediaFixer-linux binary from the Releases page.
-
-Give it execution permissions:
-
-Bash
-chmod +x MediaFixer-linux
-Run it: ./MediaFixer-linux
-
-🛠 For Developers
-If you want to run the code from source:
-
-Clone the repository:
-
-Bash
-git clone https://github.com/benris/MediaFixer.git
-cd MediaFixer
-Create a virtual environment:
-
-Bash
-python -m venv .venv
-source .venv/bin/activate  # Linux
-.\.venv\Scripts\activate   # Windows
-Install dependencies:
-
-Bash
-pip install customtkinter
-Run the app:
-
-Bash
-python main.py
-🛡️ Antivirus Note (Windows)
-Since this executable is not digitally signed, Windows Defender or Edge might flag it as "unrecognized". This is a common issue with Python-based tools. You can safely click "Run anyway" or "Keep file". The source code is fully open for inspection.
+### 🐧 Linux
+1. Go to the [Releases page](../../releases/latest).
+2. Download the `MediaFixer-linux` binary.
+3. Open your terminal and give it execution permissions:
+   ```bash
+   chmod +x MediaFixer-linux
