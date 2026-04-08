@@ -21,6 +21,16 @@ If you are tired of seeing "Unknown" audio tracks, dealing with incompatible aud
 
 ---
 
+## 📸 Screenshots
+
+| Single File Inspector (ENG) | Bulk Processing (ENG) |
+|:---:|:---:|
+| <a href="screenshots/MediaFixer_single_eng.png"><img src="screenshots/MediaFixer_single_eng.png" width="400"></a> | <a href="screenshots/MediaFixer_bulk_eng.png"><img src="screenshots/MediaFixer_bulk_eng.png" width="400"></a> |
+| **Single File Inspector (GER)** | **Bulk Processing (GER)** |
+| <a href="screenshots/MediaFixer_single_deu.png"><img src="screenshots/MediaFixer_single_deu.png" width="400"></a> | <a href="screenshots/MediaFixer_bulk_deu.png"><img src="screenshots/MediaFixer_bulk_deu.png" width="400"></a> |
+
+---
+
 ## 🚀 Installation & Usage
 
 ### 🪟 Windows (Recommended)

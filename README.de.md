@@ -21,6 +21,16 @@ Wenn du genervt bist von "Unbekannten" Tonspuren, inkompatiblen Audio-Codecs, di
 
 ---
 
+## 📸 Screenshots
+
+| Einzeldatei-Inspektor (DE) | Massenverarbeitung (DE) |
+|:---:|:---:|
+| <a href="screenshots/MediaFixer_single_deu.png"><img src="screenshots/MediaFixer_single_deu.png" width="400"></a> | <a href="screenshots/MediaFixer_bulk_deu.png"><img src="screenshots/MediaFixer_bulk_deu.png" width="400"></a> |
+| **Einzeldatei-Inspektor (EN)** | **Massenverarbeitung (EN)** |
+| <a href="screenshots/MediaFixer_single_eng.png"><img src="screenshots/MediaFixer_single_eng.png" width="400"></a> | <a href="screenshots/MediaFixer_bulk_eng.png"><img src="screenshots/MediaFixer_bulk_eng.png" width="400"></a> |
+
+---
+
 ## 🚀 Installation & Benutzung
 
 ### 🪟 Windows (Empfohlen)
