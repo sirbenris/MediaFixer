@@ -12,8 +12,8 @@ Wenn du genervt bist von "Unbekannten" Tonspuren, inkompatiblen Audio-Codecs, di
 
 ## ✨ Hauptfunktionen
 
-* **Massenverarbeitung (Bulk Patching):** Konvertiere alle Tonspuren in einem Ordner in einen bestimmten Codec (z. B. AC3, AAC), ändere Bitraten oder erzwinge einen Stereo-Downmix für maximale Kompatibilität.
-* **Sprach-Flags korrigieren:** Setze die richtigen Sprach-Tags (Deutsch, Englisch, etc.) für ganze Serien-Staffeln gleichzeitig, damit dein Player automatisch die richtige Spur wählt.
+* **Massenverarbeitung (Bulk Patching):** Konvertiere alle Tonspuren aller Videos in einem Ordner in einen bestimmten Codec (z. B. AC3, AAC), ändere Bitraten oder erzwinge einen Stereo-Downmix für maximale Kompatibilität.
+* **Sprach-Flags korrigieren:** Setze die richtigen Sprach-Tags (Deutsch, Englisch, etc.) für ganze Serien-Staffeln gleichzeitig, damit dein Player automatisch die richtige Spur für deine Videos wählt.
 * **Metadaten-Bereinigung:** Benenne Track-Titel um oder lösche versteckten Datenmüll wie `handler_name` Tags, die oft von Encodern hinterlassen werden.
 * **Sicherer Simulations-Modus:** Ruiniere niemals deine Bibliothek. MediaFixer bietet einen Simulationsmodus, der dir alle geplanten Änderungen zeigt, bevor auch nur ein Byte auf deiner Festplatte verändert wird.
 * **Einfaches Setup:** Du musst keine Terminal-Befehle lernen oder FFmpeg manuell installieren. Der integrierte Setup-Assistent erledigt alles beim ersten Start automatisch.

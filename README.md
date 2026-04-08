@@ -12,8 +12,8 @@ If you are tired of seeing "Unknown" audio tracks, dealing with incompatible aud
 
 ## ✨ Key Features
 
-* **Bulk Audio Patching:** Convert all audio tracks in a folder to a specific codec (e.g., AC3, AAC), change bitrates, or force a stereo downmix for maximum compatibility.
-* **Fix Language Flags:** Batch-apply the correct language tags (English, German, etc.) so your media player automatically selects the right audio track.
+* **Bulk Audio Patching:** Convert all audio tracks of all videos in a folder to a specific codec (e.g., AC3, AAC), change bitrates, or force a stereo downmix for maximum compatibility.
+* **Fix Language Flags:** Batch-apply the correct language tags (English, German, etc.) so your media player automatically selects the right audio track of your video files.
 * **Metadata Scrubbing:** Easily rename track titles or completely clear out hidden data-trash like `handler_name` tags left behind by encoders.
 * **Safe Simulation Mode:** Never ruin your library. MediaFixer offers a simulation mode that previews every single planned change in a detailed log before a single byte is written to your drive.
 * **Zero Config Setup:** No need to mess with terminal commands or manually download FFmpeg. The built-in setup wizard handles everything for you on the first launch.
