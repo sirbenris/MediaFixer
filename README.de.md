@@ -6,7 +6,7 @@
 
 [English](README.md) | **Deutsch**
 
-**MediaFixer** ist ein schlankes, konfigurationsfreies Desktop-Tool, um die Audiospuren deiner Mediensammlung aufzuräumen, bevor du sie deinem Server (wie Plex, Jellyfin oder Emby) hinzufügst.
+**MediaFixer** ist ein schlankes, konfigurationsfreies Desktop-Tool, um die Audiospuren der Videos deiner Mediensammlung aufzuräumen, bevor du sie deinem Server (wie Plex, Jellyfin oder Emby) hinzufügst.
 
 Wenn du genervt bist von "Unbekannten" Tonspuren, inkompatiblen Audio-Codecs, die unnötiges Transcoding verursachen, oder kryptischen Track-Titeln, dann ist dieses Tool genau für dich gemacht.
 
