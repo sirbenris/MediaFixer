@@ -172,7 +172,7 @@ def select_single_file():
     )
     if filepath: analyze_file(filepath)
 
-def apply_audio_action(orig_path, target_path, a_idx, lang, codec, bitrate, channels, action, title_val, clear_handler, btn, total, duration, p_f, p_b, p_l, mode):
+def apply_audio_action(orig_path, target_path, a_idx, lang, codec, bitrate, channels, action, title_val, clear_handler, raw_codec, btn, total, duration, p_f, p_b, p_l, mode):
     def task():
         app.after(0, lambda: p_f.pack(side="top", fill="x", padx=10, pady=(0, 10)))
         app.after(0, lambda: btn.configure(state="disabled", text=texts.get("status_fixing", "Processing...")))
@@ -184,17 +184,30 @@ def apply_audio_action(orig_path, target_path, a_idx, lang, codec, bitrate, chan
             cmd += ["-map", f"-0:a:{a_idx}"]
         elif action == "Patch":
             c_val = codec.lower() if codec != "Copy" else "copy"
+            
+            # --- SMART FALLBACK ---
+            # Wenn Copy gewählt ist, wir aber Bitrate/Kanäle ändern wollen, MÜSSEN wir re-encodieren. 
+            # Wir nutzen dafür den Ursprungs-Codec der Spur.
+            if c_val == "copy" and (bitrate != "Original" or channels != "Original"):
+                c_val = raw_codec
+                
             cmd += [f"-c:a:{a_idx}", c_val]
-            if codec != "Copy" and bitrate != "Original": cmd += [f"-b:a:{a_idx}", bitrate]
+            if bitrate != "Original": cmd += [f"-b:a:{a_idx}", bitrate]
             if channels == "Stereo Downmix": cmd += [f"-ac:a:{a_idx}", "2"]
             cmd += [f"-metadata:s:a:{a_idx}", f"language={lang}"]
             cmd += [f"-metadata:s:a:{a_idx}", f"title={title_val}"]
             if clear_handler: cmd += [f"-metadata:s:a:{a_idx}", "handler_name="]
+            
         elif action == "Add New":
             cmd += ["-map", f"0:a:{a_idx}"]
             c_val = codec.lower() if codec != "Copy" else "copy"
+            
+            # --- SMART FALLBACK ---
+            if c_val == "copy" and (bitrate != "Original" or channels != "Original"):
+                c_val = raw_codec
+                
             cmd += [f"-c:a:{total}", c_val]
-            if codec != "Copy" and bitrate != "Original": cmd += [f"-b:a:{total}", bitrate]
+            if bitrate != "Original": cmd += [f"-b:a:{total}", bitrate]
             if channels == "Stereo Downmix": cmd += [f"-ac:a:{total}", "2"]
             cmd += [f"-metadata:s:a:{total}", f"language={lang}"]
             cmd += [f"-metadata:s:a:{total}", f"title={title_val}"]
@@ -228,14 +241,14 @@ def apply_audio_action(orig_path, target_path, a_idx, lang, codec, bitrate, chan
 
     threading.Thread(target=task, daemon=True).start()
 
-def on_go_clicked(filepath, a_idx, var_lang, var_codec, var_bit, var_chan, var_act, var_title, var_clear, btn, total, dur, p_f, p_b, p_l):
+def on_go_clicked(filepath, a_idx, var_lang, var_codec, var_bit, var_chan, var_act, var_title, var_clear, raw_codec, btn, total, dur, p_f, p_b, p_l):
     mode = var_save_mode.get()
     target = filepath
     if mode == "newfile":
         target = filedialog.asksaveasfilename(title=texts.get("dialog_save_as", "Save As..."), initialfile=f"fixed_{os.path.basename(filepath)}", defaultextension=".mp4")
         if not target: return
     act_map_rev = {texts.get("btn_action_patch", "Patch"): "Patch", texts.get("btn_action_add", "Add New"): "Add New", texts.get("btn_action_delete", "Delete"): "Delete"}
-    apply_audio_action(filepath, target, a_idx, AUDIO_FLAGS[var_lang.get()], var_codec.get(), var_bit.get(), var_chan.get(), act_map_rev[var_act.get()], var_title.get(), var_clear.get(), btn, total, dur, p_f, p_b, p_l, mode)
+    apply_audio_action(filepath, target, a_idx, AUDIO_FLAGS[var_lang.get()], var_codec.get(), var_bit.get(), var_chan.get(), act_map_rev[var_act.get()], var_title.get(), var_clear.get(), raw_codec, btn, total, dur, p_f, p_b, p_l, mode)
 
 def analyze_file(filepath):
     for widget in scroll_table.winfo_children(): widget.destroy()
@@ -257,6 +270,8 @@ def analyze_file(filepath):
         tags = stream.get("tags", {})
         lang_orig = tags.get("language", "und")
         codec_orig = stream.get("codec_name", "unk").upper()
+        # Den echten FFmpeg Codec-Namen (z.B. 'aac', 'ac3') für den Fallback speichern
+        raw_codec = stream.get("codec_name", "aac") 
         channels_orig = stream.get("channels", "?")
         bps = stream.get("bit_rate") or tags.get("BPS")
         bitrate_kbps = f"{int(bps)//1000} kbps" if str(bps).isdigit() else texts.get("unknown_bitrate", "???")
@@ -283,7 +298,6 @@ def analyze_file(filepath):
         v_act = customtkinter.StringVar(value=list(act_map.keys())[0])
         customtkinter.CTkOptionMenu(ctrl, values=list(act_map.keys()), variable=v_act, width=130, button_color="darkblue").pack(side="left", padx=2)
 
-        # NEU: Zweite Zeile für Titel und Handler-Clear
         ctrl2 = customtkinter.CTkFrame(row, fg_color="transparent")
         ctrl2.pack(side="top", fill="x", padx=5, pady=(0, 5))
         
@@ -298,9 +312,10 @@ def analyze_file(filepath):
         p_b = customtkinter.CTkProgressBar(p_f, height=8); p_b.pack(side="left", fill="x", expand=True, padx=(0, 10)); p_b.set(0)
         p_l = customtkinter.CTkLabel(p_f, text="0%", font=("Arial", 10, "bold")); p_l.pack(side="right")
 
+        # Hier wird der 'raw_codec' heimlich an den Button übergeben
         btn_go = customtkinter.CTkButton(ctrl, text="GO", width=50, font=("Arial", 12, "bold"), fg_color="#1f538d")
-        btn_go.configure(command=lambda a=a_idx, l=v_lang, c=v_codec, b=v_bit, ch=v_chan, act=v_act, tit=v_title, clr=v_clear, btn=btn_go, p_f=p_f, p_b=p_b, p_l=p_l: 
-            threading.Thread(target=lambda: on_go_clicked(filepath, a, l, c, b, ch, act, tit, clr, btn, len(streams), duration, p_f, p_b, p_l)).start()
+        btn_go.configure(command=lambda a=a_idx, l=v_lang, c=v_codec, b=v_bit, ch=v_chan, act=v_act, tit=v_title, clr=v_clear, rc=raw_codec, btn=btn_go, p_f=p_f, p_b=p_b, p_l=p_l: 
+            threading.Thread(target=lambda: on_go_clicked(filepath, a, l, c, b, ch, act, tit, clr, rc, btn, len(streams), duration, p_f, p_b, p_l)).start()
         )
         btn_go.pack(side="right", padx=5)
 
@@ -494,6 +509,10 @@ def execute_bulk_process(planned_changes, sim_win):
             
             app.after(0, lambda d=desc, f=os.path.basename(filepath): lbl_bulk_status.configure(text=f"{d} : {f}"))
             
+            # Kurz neu scannen, um die Original-Codecs für den Smart Fallback parat zu haben
+            file_data = media_engine.probe_file(filepath)
+            streams = file_data.get("streams", []) if file_data else []
+            
             target_lang_code = AUDIO_FLAGS.get(var_bulk_lang.get(), "und")
             action = var_bulk_act.get()
             title_val = var_bulk_title.get()
@@ -506,20 +525,33 @@ def execute_bulk_process(planned_changes, sim_win):
                 for t_idx in matched_indices: cmd += ["-map", f"-0:a:{t_idx}"]
             elif action == texts.get("btn_action_patch", "Patch"):
                 for t_idx in matched_indices:
+                    raw_codec = streams[t_idx].get("codec_name", "aac") if t_idx < len(streams) else "aac"
                     c_val = var_bulk_codec.get().lower() if var_bulk_codec.get() != "Copy" else "copy"
+                    
+                    # --- SMART FALLBACK ---
+                    if c_val == "copy" and (var_bulk_bit.get() != "Original" or var_bulk_chan.get() != "Original"):
+                        c_val = raw_codec
+                        
                     cmd += [f"-c:a:{t_idx}", c_val]
-                    if var_bulk_codec.get() != "Copy" and var_bulk_bit.get() != "Original": cmd += [f"-b:a:{t_idx}", var_bulk_bit.get()]
+                    if var_bulk_bit.get() != "Original": cmd += [f"-b:a:{t_idx}", var_bulk_bit.get()]
                     if var_bulk_chan.get() == "Stereo Downmix": cmd += [f"-ac:a:{t_idx}", "2"]
                     cmd += [f"-metadata:s:a:{t_idx}", f"language={target_lang_code}"]
                     if title_val: cmd += [f"-metadata:s:a:{t_idx}", f"title={title_val}"]
                     if clear_handler: cmd += [f"-metadata:s:a:{t_idx}", "handler_name="]
+                    
             elif action == texts.get("btn_action_add", "Add New"):
                 for idx_offset, t_idx in enumerate(matched_indices):
                     new_idx = total_audio + idx_offset
+                    raw_codec = streams[t_idx].get("codec_name", "aac") if t_idx < len(streams) else "aac"
                     cmd += ["-map", f"0:a:{t_idx}"]
                     c_val = var_bulk_codec.get().lower() if var_bulk_codec.get() != "Copy" else "copy"
+                    
+                    # --- SMART FALLBACK ---
+                    if c_val == "copy" and (var_bulk_bit.get() != "Original" or var_bulk_chan.get() != "Original"):
+                        c_val = raw_codec
+                        
                     cmd += [f"-c:a:{new_idx}", c_val]
-                    if var_bulk_codec.get() != "Copy" and var_bulk_bit.get() != "Original": cmd += [f"-b:a:{new_idx}", var_bulk_bit.get()]
+                    if var_bulk_bit.get() != "Original": cmd += [f"-b:a:{new_idx}", var_bulk_bit.get()]
                     if var_bulk_chan.get() == "Stereo Downmix": cmd += [f"-ac:a:{new_idx}", "2"]
                     cmd += [f"-metadata:s:a:{new_idx}", f"language={target_lang_code}"]
                     if title_val: cmd += [f"-metadata:s:a:{new_idx}", f"title={title_val}"]
