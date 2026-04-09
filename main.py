@@ -579,7 +579,7 @@ lang_menu.set(current_config["ui_language"])
 lang_menu.pack(pady=10, padx=20, anchor="e")
 
 tabview = customtkinter.CTkTabview(app)
-tabview.pack(padx=20, pady=20, fill="both", expand=True)
+tabview.pack(padx=20, pady=0, fill="both", expand=True)
 
 tab_single = tabview.add(texts.get("tab_single", "Single File"))
 tab_bulk = tabview.add(texts.get("tab_bulk", "Bulk"))
@@ -773,5 +773,26 @@ if not os.path.exists(config.CONFIG_FILE) or not system_ready:
 
 # check for update
 threading.Thread(target=check_for_updates, daemon=True).start()
+
+# --- Linux Mousewheel Fix ---
+def on_linux_scroll(event):
+    # mousewheel -> button events
+    direction = -1 if event.num == 4 else 1
+    
+    # Get underlaying element
+    widget = app.winfo_containing(event.x_root, event.y_root)
+    
+    # Move scrollbar
+    while widget:
+        if widget.winfo_class() == "Canvas":
+            if widget.cget("yscrollcommand"):
+                widget.yview_scroll(direction, "units")
+                return
+        widget = widget.master
+
+# Linux only
+if platform.system() == "Linux":
+    app.bind_all("<Button-4>", on_linux_scroll)
+    app.bind_all("<Button-5>", on_linux_scroll)
 
 app.mainloop()
