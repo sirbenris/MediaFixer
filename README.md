@@ -6,7 +6,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-**MediaFixer** is a lightweight, zero-configuration desktop tool designed to clean up your media library's audiotracks before it hits your server (like Plex, Jellyfin, or Emby). 
+**MediaFixer** is a lightweight, zero-configuration desktop tool designed to clean up your video's audiotracks before it hits your server (like Plex, Jellyfin, or Emby). 
 
 If you are tired of seeing "Unknown" audio tracks, dealing with incompatible audio codecs causing unexpected transcoding, or finding weird encoder artifacts in your track titles, this tool is built for you.
 
