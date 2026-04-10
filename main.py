@@ -218,6 +218,16 @@ def apply_audio_action(orig_path, target_path, a_idx, lang, codec, bitrate, chan
             cmd += [f"-metadata:s:a:{total}", f"title={title_val}"]
             if clear_handler: cmd += [f"-metadata:s:a:{total}", "handler_name="]
 
+        # --- SMART CPU LIMITER ---
+            cpu_choice = var_bulk_cpu.get()
+            if cpu_choice == texts.get("opt_cpu_med", "Medium"):
+                # Nutzt exakt die Hälfte der Threads (Fallback auf 2, falls os.cpu_count() fehlschlägt)
+                cores = max(1, (os.cpu_count() or 4) // 2)
+                cmd += ["-threads", str(cores)]
+            elif cpu_choice == texts.get("opt_cpu_low", "Low"):
+                # Zwingt FFmpeg auf einen einzigen Thread
+                cmd += ["-threads", "1"]   
+
         cmd += ["-ignore_unknown", "-dn", "-write_tmcd", "0", out_file, "-y"]
 
         try:
@@ -704,11 +714,25 @@ ttk.Checkbutton(a_row2, text=texts.get("chk_clear_handler", "Clear Handler Name"
 frame_start = ttk.Frame(scroll_bulk.scrollable_frame)
 frame_start.pack(fill="x", padx=30, pady=(20, 10))
 
+options_row = ttk.Frame(frame_start)
+options_row.pack(fill="x", pady=10)
+
 var_bulk_backup = tk.BooleanVar(value=True)
-ttk.Checkbutton(frame_start, text=texts.get("lbl_backup", "Keep Original File as Backup (.orig)"), variable=var_bulk_backup).pack(pady=10)
+ttk.Checkbutton(options_row, text=texts.get("lbl_backup", "Keep Original File as Backup (.orig)"), variable=var_bulk_backup).pack(side="left", padx=(150, 20))
+
+ttk.Label(options_row, text=texts.get("lbl_cpu_load", "CPU Usage:")).pack(side="left", padx=(20, 5))
+
+var_bulk_cpu = tk.StringVar(value=texts.get("opt_cpu_max", "Maximum"))
+cpu_opts = [
+    texts.get("opt_cpu_max", "Maximum"),
+    texts.get("opt_cpu_med", "Medium"),
+    texts.get("opt_cpu_low", "Low")
+]
+cb_cpu = ttk.Combobox(options_row, values=cpu_opts, textvariable=var_bulk_cpu, state="readonly", width=22)
+cb_cpu.pack(side="left")
 
 btn_bulk_go = ttk.Button(frame_start, text=texts.get("btn_start_bulk", "Vorschau & Simulation"), style="Accent.TButton", command=simulate_bulk_process)
-btn_bulk_go.pack(pady=5, fill="x", padx=150)
+btn_bulk_go.pack(pady=10, fill="x", padx=150)
 
 bulk_prog_bar = ttk.Progressbar(frame_start, maximum=1.0, mode="determinate")
 bulk_prog_bar.pack(fill="x", padx=40, pady=15)
