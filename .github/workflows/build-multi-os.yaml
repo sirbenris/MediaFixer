@@ -36,15 +36,15 @@ jobs:
         python -m pip install --upgrade pip
         pip install sv-ttk pyinstaller pymediainfo
 
-    - name: Inject Version and Set Env
+      - name: Inject Version and Set Env
       shell: bash
       run: |
         # Version holen und evtl. v entfernen
         TAG_NAME="${{ github.event.release.tag_name }}"
         CLEAN_VERSION=${TAG_NAME#v}
         
-        # APP_VERSION überschreiben
-        sed -i "s/APP_VERSION = .*/APP_VERSION = \"$CLEAN_VERSION\"/" config.py
+        # APP_VERSION überschreiben (fehlertolerant bei Leerzeichen)
+        sed -i "s/APP_VERSION.*/APP_VERSION = \"$CLEAN_VERSION\"/" config.py
         
         # version -> Umgebungsvariable
         echo "CLEAN_VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
