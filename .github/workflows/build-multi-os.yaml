@@ -53,7 +53,6 @@ jobs:
     - name: Build with PyInstaller
       shell: bash
       run: |
-        TK_PATH=$(python -c "import customtkinter; import os; print(os.path.dirname(customtkinter.__file__))")
         
         pyinstaller --noconsole ${{ matrix.pyinstaller_mode }} --name "${{ matrix.artifact_name }}-${{ env.CLEAN_VERSION }}" \
         --add-data "locales${{ matrix.sep }}locales" \
