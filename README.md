@@ -72,7 +72,7 @@ Want to tweak the code or build it yourself? No problem!
 
 3. Install the required dependencies:
 
-       pip install customtkinter pymediainfo
+       pip install sv_ttk pymediainfo
 
 4. Run the app:
 
