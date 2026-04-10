@@ -34,7 +34,7 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install customtkinter pyinstaller pymediainfo
+        pip install sv-ttk pyinstaller pymediainfo
 
     - name: Inject Version and Set Env
       shell: bash
@@ -59,7 +59,6 @@ jobs:
         --add-data "locales${{ matrix.sep }}locales" \
         --add-data "audio_flags.json${{ matrix.sep }}." \
         --add-data "rime.json${{ matrix.sep }}." \
-        --add-data "${TK_PATH}${{ matrix.sep }}customtkinter" \
         --collect-binaries pymediainfo \
         main.py
 
