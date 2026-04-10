@@ -55,6 +55,8 @@
     "btn_summary_export": "Export report as .txt",
     "lbl_backup": "Keep original files as backup (.orig)",
     "lbl_cpu_load": "CPU Usage:",
+    "lbl_eta": "ETA: {m}m {s}s",
+    "lbl_eta_calc": "Calculating ETA...",
     "lbl_settings": "4. Start & Backup",
     "lbl_sim_intro": "The following files will be modified:",
     "lbl_summary_intro": "Successfully processed files:",
@@ -67,6 +69,7 @@
     "status_bulk_done": "✅ Processing complete! ({count} files)",
     "status_bulk_empty": "Folder empty or no matches",
     "status_bulk_scan": "Scanning folder... ⏳",
+    "status_processing": "Processing... ⏳",
     "win_sim_title": "Bulk Simulation: Planned Changes",
     "win_summary_title": "Processing Complete",
 

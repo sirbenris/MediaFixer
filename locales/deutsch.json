@@ -55,6 +55,8 @@
     "btn_summary_export": "Report als .txt exportieren",
     "lbl_backup": "Originaldateien als Backup behalten (.orig)",
     "lbl_cpu_load": "CPU-Auslastung:",
+    "lbl_eta": "Restzeit: {m}m {s}s",
+    "lbl_eta_calc": "Berechne Restzeit...",
     "lbl_settings": "4. Start & Backup",
     "lbl_sim_intro": "Folgende Dateien werden geändert:",
     "lbl_summary_intro": "Erfolgreich bearbeitete Dateien:",
@@ -67,6 +69,7 @@
     "status_bulk_done": "✅ Verarbeitung abgeschlossen! ({count} Dateien)",
     "status_bulk_empty": "Ordner leer oder keine Treffer",
     "status_bulk_scan": "Scanne Ordner... ⏳",
+    "status_processing": "Verarbeite... ⏳",
     "win_sim_title": "Bulk-Simulation: Geplante Änderungen",
     "win_summary_title": "Verarbeitung abgeschlossen",
 

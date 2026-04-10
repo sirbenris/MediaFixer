@@ -11,6 +11,7 @@ import urllib.request
 import webbrowser
 import json
 import sv_ttk
+import time
 
 import config
 from config import current_config, texts, audio_flags as AUDIO_FLAGS
@@ -390,7 +391,7 @@ def simulate_bulk_process():
         if not messagebox.askyesno(texts.get("warn_title", "Warning"), texts.get("warn_msg", "Proceed without backups?")): return
 
     def task():
-        app.after(0, lambda: btn_bulk_go.configure(state="disabled"))
+        app.after(0, lambda: btn_bulk_go.configure(state="disabled", text=texts.get("status_bulk_scan", "Scanning... ⏳")))
         app.after(0, lambda: lbl_bulk_status.configure(text=texts.get("status_bulk_scan", "Scanning..."), foreground="#FFEB3B"))
         
         target_ext = var_bulk_ext.get()
@@ -423,7 +424,7 @@ def simulate_bulk_process():
 
         if not filtered_files:
             app.after(0, lambda: lbl_bulk_status.configure(text=texts.get("status_bulk_empty", "Empty"), foreground="#FF9800"))
-            app.after(0, lambda: btn_bulk_go.configure(state="normal"))
+            app.after(0, lambda: btn_bulk_go.configure(state="normal", text=texts.get("btn_start_bulk", "Vorschau & Simulation")))
             return
 
         app.after(0, lambda: bulk_prog_bar.configure(value=0))
@@ -447,7 +448,8 @@ def simulate_bulk_process():
 
         app.after(0, lambda: show_simulation_popup(planned_changes))
         app.after(0, lambda: lbl_bulk_status.configure(text="Scan complete.", foreground="white"))
-        app.after(0, lambda: btn_bulk_go.configure(state="normal"))
+        
+        app.after(0, lambda: btn_bulk_go.configure(state="normal", text=texts.get("btn_start_bulk", "Vorschau & Simulation")))
 
     threading.Thread(target=task, daemon=True).start()
 
@@ -480,11 +482,13 @@ def execute_bulk_process(planned_changes, sim_win):
     do_backup = var_bulk_backup.get()
     
     def task():
-        app.after(0, lambda: btn_bulk_go.configure(state="disabled"))
+        app.after(0, lambda: btn_bulk_go.configure(state="disabled", text=texts.get("status_processing", "Processing... ⏳")))
         app.after(0, lambda: bulk_prog_bar.configure(value=0))
         
         total = len(planned_changes)
         successful_files = []
+        
+        start_time = time.time()
         
         for i, chg in enumerate(planned_changes):
             filepath = chg['filepath']
@@ -492,7 +496,18 @@ def execute_bulk_process(planned_changes, sim_win):
             matched_indices = chg['matched_indices']
             total_audio = chg['total_audio']
             
-            app.after(0, lambda d=desc, f=os.path.basename(filepath): lbl_bulk_status.configure(text=f"{d} : {f}"))
+            # --- ETA ---
+            if i > 0:
+                elapsed = time.time() - start_time
+                avg_time = elapsed / i
+                remaining = total - i
+                eta_seconds = int(avg_time * remaining)
+                m, s = divmod(eta_seconds, 60)
+                eta_str = texts.get("lbl_eta", "ETA: {m}m {s}s").replace("{m}", str(m)).replace("{s}", str(s).zfill(2))
+            else:
+                eta_str = texts.get("lbl_eta_calc", "Calculating ETA...")
+                
+            app.after(0, lambda d=desc, f=os.path.basename(filepath), e=eta_str: lbl_bulk_status.configure(text=f"[{e}] {d} : {f}"))
             
             file_data = media_engine.probe_file(filepath)
             streams = file_data.get("streams", []) if file_data else []
@@ -531,6 +546,17 @@ def execute_bulk_process(planned_changes, sim_win):
                     if title_val: cmd += [f"-metadata:s:a:{new_idx}", f"title={title_val}"]
                     if clear_handler: cmd += [f"-metadata:s:a:{new_idx}", "handler_name="]
 
+            # --- SMART CPU LIMITER ---
+            try:
+                cpu_choice = var_bulk_cpu.get()
+                if cpu_choice == texts.get("opt_cpu_med", "Medium (Multitasking)"):
+                    cores = max(1, (os.cpu_count() or 4) // 2)
+                    cmd += ["-threads", str(cores)]
+                elif cpu_choice == texts.get("opt_cpu_low", "Low (Background)"):
+                    cmd += ["-threads", "1"]
+            except NameError:
+                pass # Fallback, falls var_bulk_cpu noch nicht existiert
+
             cmd += ["-ignore_unknown", "-dn", "-write_tmcd", "0", out_file, "-y", "-loglevel", "error"]
 
             try:
@@ -547,7 +573,7 @@ def execute_bulk_process(planned_changes, sim_win):
                 
             app.after(0, lambda p=(i+1)/total: bulk_prog_bar.configure(value=p))
             
-        app.after(0, lambda: btn_bulk_go.configure(state="normal"))
+        app.after(0, lambda: btn_bulk_go.configure(state="normal", text=texts.get("btn_start_bulk", "Vorschau & Simulation")))
         app.after(0, lambda: lbl_bulk_status.configure(text=texts.get("status_bulk_done", "Done!").replace("{count}", str(len(successful_files))), foreground="#4CAF50"))
         app.after(0, lambda: show_summary_popup(successful_files))
 
