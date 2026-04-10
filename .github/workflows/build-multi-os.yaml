@@ -36,7 +36,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install sv-ttk pyinstaller pymediainfo
 
-      - name: Inject Version and Set Env
+    - name: Inject Version and Set Env
       shell: bash
       run: |
         # Version holen und evtl. v entfernen
