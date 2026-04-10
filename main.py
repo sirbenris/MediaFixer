@@ -380,6 +380,29 @@ def match_bulk_streams(filepath):
         matched.append(a_idx)
     return matched, len(streams)
 
+# --- UI Animation Helpers ---
+bulk_is_working = False
+bulk_current_file_text = ""
+
+def animate_bulk_ui(step=0):
+    if not bulk_is_working:
+        return
+        
+    # 1. Animierte Punkte auf dem Button (Länge bleibt konstant, damit UI nicht wackelt)
+    base_btn_text = texts.get("status_processing", "Processing").replace("⏳", "").replace(".", "").strip()
+    dots = "." * ((step // 4) % 4)
+    spaces = " " * (3 - ((step // 4) % 4))
+    btn_bulk_go.configure(text=f"{base_btn_text}{dots}{spaces} ⏳")
+    
+    # 2. Nerdiger Braille-Spinner vor dem Status-Text
+    spinners = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+    spinner = spinners[step % len(spinners)]
+    if bulk_current_file_text:
+        lbl_bulk_status.configure(text=f"{spinner} {bulk_current_file_text}")
+        
+    app.after(80, animate_bulk_ui, step + 1)
+
+
 def simulate_bulk_process():
     if not bulk_target_folder: 
         messagebox.showwarning(texts.get("warn_title", "Warning"), texts.get("warn_no_folder", "Please select a folder first!"))
@@ -391,8 +414,10 @@ def simulate_bulk_process():
         if not messagebox.askyesno(texts.get("warn_title", "Warning"), texts.get("warn_msg", "Proceed without backups?")): return
 
     def task():
+        # --- UI UPDATE & AUTO-SCROLL ---
         app.after(0, lambda: btn_bulk_go.configure(state="disabled", text=texts.get("status_bulk_scan", "Scanning... ⏳")))
         app.after(0, lambda: lbl_bulk_status.configure(text=texts.get("status_bulk_scan", "Scanning..."), foreground="#FFEB3B"))
+        app.after(50, lambda: scroll_bulk.canvas.yview_moveto(1.0)) # Scrollt flüssig nach ganz unten!
         
         target_ext = var_bulk_ext.get()
         name_filter = var_bulk_contains.get()
@@ -448,7 +473,6 @@ def simulate_bulk_process():
 
         app.after(0, lambda: show_simulation_popup(planned_changes))
         app.after(0, lambda: lbl_bulk_status.configure(text="Scan complete.", foreground="white"))
-        
         app.after(0, lambda: btn_bulk_go.configure(state="normal", text=texts.get("btn_start_bulk", "Vorschau & Simulation")))
 
     threading.Thread(target=task, daemon=True).start()
@@ -482,12 +506,16 @@ def execute_bulk_process(planned_changes, sim_win):
     do_backup = var_bulk_backup.get()
     
     def task():
-        app.after(0, lambda: btn_bulk_go.configure(state="disabled", text=texts.get("status_processing", "Processing... ⏳")))
+        global bulk_is_working, bulk_current_file_text
+        bulk_is_working = True
+        
+        app.after(0, lambda: btn_bulk_go.configure(state="disabled"))
         app.after(0, lambda: bulk_prog_bar.configure(value=0))
+        app.after(50, lambda: scroll_bulk.canvas.yview_moveto(1.0)) # Auto-scroll
+        app.after(0, animate_bulk_ui) # Spinner starten
         
         total = len(planned_changes)
         successful_files = []
-        
         start_time = time.time()
         
         for i, chg in enumerate(planned_changes):
@@ -507,7 +535,10 @@ def execute_bulk_process(planned_changes, sim_win):
             else:
                 eta_str = texts.get("lbl_eta_calc", "Calculating ETA...")
                 
-            app.after(0, lambda d=desc, f=os.path.basename(filepath), e=eta_str: lbl_bulk_status.configure(text=f"[{e}] {d} : {f}"))
+            def update_text(d=desc, f=os.path.basename(filepath), e=eta_str):
+                global bulk_current_file_text
+                bulk_current_file_text = f"[{e}] {d} : {f}"
+            app.after(0, update_text)
             
             file_data = media_engine.probe_file(filepath)
             streams = file_data.get("streams", []) if file_data else []
@@ -546,16 +577,15 @@ def execute_bulk_process(planned_changes, sim_win):
                     if title_val: cmd += [f"-metadata:s:a:{new_idx}", f"title={title_val}"]
                     if clear_handler: cmd += [f"-metadata:s:a:{new_idx}", "handler_name="]
 
-            # --- SMART CPU LIMITER ---
             try:
                 cpu_choice = var_bulk_cpu.get()
-                if cpu_choice == texts.get("opt_cpu_med", "Medium (Multitasking)"):
+                if cpu_choice == texts.get("opt_cpu_med", "Medium"):
                     cores = max(1, (os.cpu_count() or 4) // 2)
                     cmd += ["-threads", str(cores)]
-                elif cpu_choice == texts.get("opt_cpu_low", "Low (Background)"):
+                elif cpu_choice == texts.get("opt_cpu_low", "Low"):
                     cmd += ["-threads", "1"]
             except NameError:
-                pass # Fallback, falls var_bulk_cpu noch nicht existiert
+                pass 
 
             cmd += ["-ignore_unknown", "-dn", "-write_tmcd", "0", out_file, "-y", "-loglevel", "error"]
 
@@ -573,6 +603,9 @@ def execute_bulk_process(planned_changes, sim_win):
                 
             app.after(0, lambda p=(i+1)/total: bulk_prog_bar.configure(value=p))
             
+        # --- UI UPDATE & ANIMATION STOPPEN ---
+        bulk_is_working = False
+        bulk_current_file_text = ""
         app.after(0, lambda: btn_bulk_go.configure(state="normal", text=texts.get("btn_start_bulk", "Vorschau & Simulation")))
         app.after(0, lambda: lbl_bulk_status.configure(text=texts.get("status_bulk_done", "Done!").replace("{count}", str(len(successful_files))), foreground="#4CAF50"))
         app.after(0, lambda: show_summary_popup(successful_files))
