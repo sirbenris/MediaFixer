@@ -221,11 +221,9 @@ def apply_audio_action(orig_path, target_path, a_idx, lang, codec, bitrate, chan
         # --- SMART CPU LIMITER ---
             cpu_choice = var_bulk_cpu.get()
             if cpu_choice == texts.get("opt_cpu_med", "Medium"):
-                # Nutzt exakt die Hälfte der Threads (Fallback auf 2, falls os.cpu_count() fehlschlägt)
                 cores = max(1, (os.cpu_count() or 4) // 2)
                 cmd += ["-threads", str(cores)]
             elif cpu_choice == texts.get("opt_cpu_low", "Low"):
-                # Zwingt FFmpeg auf einen einzigen Thread
                 cmd += ["-threads", "1"]   
 
         cmd += ["-ignore_unknown", "-dn", "-write_tmcd", "0", out_file, "-y"]
